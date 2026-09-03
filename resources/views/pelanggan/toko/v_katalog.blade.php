@@ -1,0 +1,52 @@
+@extends('layouts.app')
+
+@section('content')
+
+<!-- Banner Promo (Event) Section -->
+@php $promoTerbaru = collect($data_carousel ?? [])->take(3); @endphp
+@if (!empty($data_carousel) && count($promoTerbaru) > 0)
+  <div class="promo-section">
+    <div class="container-promo">
+        <div class="promo-carousel" id="promoCarousel">
+            @php $index = 0; @endphp
+            @foreach ($promoTerbaru as $promo)
+                @foreach ($promo->all_images as $gambar)
+                    <img
+                        src="{{ asset($gambar) }}"
+                        class="carousel-img {{ $index === 0 ? 'active' : '' }}"
+                        alt="{{ $promo->nama_promo }}"
+                        data-promo-id="{{ $promo->id_promo }}"
+                    >
+                    @php $index++; @endphp
+                @endforeach
+            @endforeach
+            <!-- Indikator Titik (navigasi) -->
+            <div class="carousel-dots" id="carouselDots">
+                @php $dotIndex = 0; @endphp
+                @foreach ($promoTerbaru as $promo)
+                    @foreach ($promo->all_images as $gambar)
+                        <span
+                            class="dot {{ $dotIndex === 0 ? 'active' : '' }}"
+                            data-slide-to="{{ $dotIndex }}"
+                        ></span>
+                        @php $dotIndex++; @endphp
+                    @endforeach
+                @endforeach
+            </div>
+        </div>
+    </div>
+  </div>
+@endif
+
+<!-- Product Section -->
+  <main class="product-section">
+    <div class="container-product">
+        <h3 class="product-title">Katalog Produk</h3>
+        <div class="product-grid">
+            @include('layouts.v_produk')
+        </div>
+    </div>
+  </main>
+    
+    @endsection
+
