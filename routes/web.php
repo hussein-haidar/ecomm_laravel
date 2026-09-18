@@ -210,7 +210,6 @@ Route::middleware([FilterAdmin::class])->group(function () {
     Route::get('admin_data/view_totjual', [Admin_data::class, 'view_totjual'])->name('admin_data.view_totjual');
     Route::get('admin_data/view_bayar', [Admin_data::class, 'view_bayar'])->name('admin_data.view_bayar');
     Route::get('admin_data/viewFoto/{id_bayar}', [Admin_data::class, 'viewFoto'])->name('admin_data.viewFoto');
-    Route::get('/admin_kelola_data/view_bayar', [Admin_data::class, 'view_bayar'])->name('admin_data.view_bayar');
     Route::post('admin_data/konfirmStatusBayar', [Admin_data::class, 'konfirmStatusBayar'])->name('admin_data.konfirmStatusBayar');
 
     Route::get('admin_data/view_benefit', [Admin_data::class, 'view_benefit'])->name('admin_data.view_benefit');
@@ -283,9 +282,12 @@ Route::middleware([FilterPelanggan::class])->group(
         Route::post('pelanggan_data/update_profile/{id}', [Pelanggan_data::class, 'update_profile'])->name('pelanggan_data.update_profile');
 
         Route::get('pelanggan_data/cart', [Pelanggan_data::class, 'cart'])->name('pelanggan_data.cart');
+        Route::get('pelanggan_data/get_cart', [Pelanggan_data::class, 'getCart'])->name('pelanggan_data.get_cart');
         Route::post('pelanggan_data/add_to_cart', [Pelanggan_data::class, 'add_to_cart'])->name('pelanggan_data.add_to_cart');
-        Route::post('pelanggan_data/updateCart/{id_keranjang}', [Pelanggan_data::class, 'updateCart'])->name('pelanggan_data.updateCart');
+        Route::post('pelanggan_data/update_cart/{id_keranjang}', [Pelanggan_data::class, 'update_cart'])->name('pelanggan_data.update_cart');
+        Route::delete('pelanggan_data/remove_from_cart/{id_keranjang}', [Pelanggan_data::class, 'remove_from_cart'])->name('pelanggan_data.remove_from_cart');
         Route::delete('pelanggan_data/deleteCart/{id_keranjang}', [Pelanggan_data::class, 'deleteCart'])->name('pelanggan_data.deleteCart');
+        Route::get('pelanggan_data/checkout', [Pelanggan_data::class, 'checkout'])->name('pelanggan_data.checkout');
 
         Route::get('pelanggan_data/beli', [Pelanggan_data::class, 'beli'])->name('pelanggan_data.beli');
         Route::get('pelanggan_data/search_destination', [Pelanggan_data::class, 'search_destination'])->name('pelanggan_data.search_destination');
@@ -333,8 +335,8 @@ Route::middleware([FilterPelanggan::class])->group(
 
         // Wishlist
         Route::get('pelanggan_data/wishlist', [Pelanggan_data::class, 'wishlist'])->name('pelanggan_data.wishlist');
-        Route::post('pelanggan_data/wishlist/add', [Pelanggan_data::class, 'addWishlist'])->name('pelanggan_data.addWishlist');
-        Route::delete('pelanggan_data/wishlist/delete/{id_wishlist}', [Pelanggan_data::class, 'deleteWishlist'])->name('pelanggan_data.deleteWishlist');
+        Route::post('pelanggan_data/wishlist/add', [Pelanggan_data::class, 'addWishlist'])->name('pelanggan_data.wishlist.add');
+        Route::delete('pelanggan_data/wishlist/delete/{id_wishlist}', [Pelanggan_data::class, 'deleteWishlist'])->name('pelanggan_data.wishlist.delete');
     }
 );
 

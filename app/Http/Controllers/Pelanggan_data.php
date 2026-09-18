@@ -224,6 +224,7 @@ class Pelanggan_data extends WebsiteController
             'kode_kota' => $profil->kode_kota,
             'nama_kota' => $profil->nama_kota,
             'foto_pelanggan' => $profil->foto_pelanggan ?? Session::get('foto_pelanggan'),
+            'password' => $profil->password ? '••••••••' : '', // indikator password ada
         ]);
 
         Session::flash('pesan_profil', 'Profil berhasil diperbarui.');
@@ -408,9 +409,7 @@ class Pelanggan_data extends WebsiteController
         if ($ukuran_baru && $ukuran_baru != $keranjang->ukuran_produk) {
 
             // Ambil stok berdasarkan id_produk dan ukuran baru
-            $stok_baru = M_Stok::where('id_stok', $keranjang->id_stok)
-                ->where('id_stok', $keranjang['id_stok'])
-                ->first();
+            $stok_baru = M_Stok::where('id_stok', $keranjang->id_stok)->first();
 
             if (!$stok_baru) {
                 return back()->with('error', 'Ukuran produk tidak tersedia.');
@@ -452,6 +451,291 @@ class Pelanggan_data extends WebsiteController
 
         // Redirect ke route bernama
         return Redirect::route('pelanggan_data.cart');
+    }
+
+    public function getCart(Request $request)
+    {
+        $search = $request->input('search');
+
+        // Ambil query builder dan paginate
+        $keranjang = M_Keranjang::get_searchKeranjang()
+            ->when($search, function ($query, $search) {
+                return $query->where('produk.nama_produk', 'like', "%{$search}%")
+                    ->orWhere('keranjang.ukuran_produk', 'like', "%{$search}%");
+            })
+            ->paginate(10);
+
+        // Ambil data produk untuk mapping
+        $produkData = $this->M_Home_toko->getProduk($request->input('keyword', ''));
+
+        // Buat produk_map
+        $produk_map = [];
+        foreach ($produkData as $produk) {
+            $ukuran_produk = $produk['ukuran_produk'] ?? '';
+            if (strpos($ukuran_produk, '-') !== false) {
+                $ukuran_list = array_map('trim', explode('-', $ukuran_produk));
+            } elseif (strpos($ukuran_produk, ',') !== false) {
+                $ukuran_list = array_map('trim', explode(',', $ukuran_produk));
+            } else {
+                $ukuran_list = [$ukuran_produk];
+            }
+
+            $produk_map[$produk['nama_produk']] = [
+                'ukuran_list' => $ukuran_list,
+                'nama_produk' => $produk['nama_produk'],
+                'foto_produk' => $produk['foto_produk'],
+            ];
+        }
+
+        // Tambahkan ukuran_list ke setiap item DI DALAM PAGINATOR
+        foreach ($keranjang as $item) {
+            $nama = $item->nama_produk;
+            if (isset($produk_map[$nama])) {
+                $item->ukuran_list = $produk_map[$nama]['ukuran_list'];
+                $item->foto_produk = $produk_map[$nama]['foto_produk'];
+            } else {
+                $item->ukuran_list = [];
+            }
+        }
+
+        // Total seluruh item di keranjang (bukan hanya halaman pagination)
+        $semuaKeranjang = M_Keranjang::get_searchKeranjang()->get();
+        $totalSemua = $semuaKeranjang->sum('total_harga');
+        $jumlahItem = $semuaKeranjang->count();
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'cart' => $keranjang,
+                'total_semua' => $totalSemua,
+                'jumlah_item' => $jumlahItem,
+            ]);
+        }
+
+        // If not AJAX, return view (fallback to cart view)
+        $data = [
+            'title' => 'Keranjang',
+            'title2' => 'Keranjang',
+            'keranjang' => $keranjang,
+            'produk_data' => $produkData,
+            'total_semua' => $totalSemua,
+            'jumlah_item' => $jumlahItem,
+            'jenis_produk_dropdown' => $this->M_Home_toko->getJenisProdukDropdown(),
+            'user_logged_in' => $request->session()->get('user_logged_in', false),
+        ];
+
+        return view('pelanggan.data_keranjang.v_keranjang', $data);
+    }
+
+    public function update_cart(Request $request, $id_keranjang)
+    {
+        $request->validate([
+            'id_keranjang' => 'required|exists:keranjang,id_keranjang',
+            'jumlah_produk' => 'nullable|integer|min:1',
+            'ukuran_produk' => 'nullable|string',
+        ]);
+
+        $isAjax = $request->ajax() || $request->wantsJson();
+
+        $keranjang = M_Keranjang::find($id_keranjang);
+        if (!$keranjang) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Data keranjang tidak ditemukan.'], 404);
+            }
+            Session::flash('hapus_error', 'Data keranjang tidak ditemukan.');
+            return Redirect::route('pelanggan_data.cart');
+        }
+
+        $jumlah_baru = $request->input('jumlah_produk');
+        if ($jumlah_baru && $jumlah_baru != $keranjang->jumlah_produk) {
+            $stok = M_Stok::find($keranjang->id_stok);
+            if (!$stok) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Stok produk tidak ditemukan.'], 404);
+                }
+                Session::flash('hapus_error', 'Stok produk tidak ditemukan.');
+                return Redirect::route('pelanggan_data.cart');
+            }
+
+            if ($jumlah_baru > $stok->jumlah_stok_produk) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Jumlah melebihi stok yang tersedia.'], 400);
+                }
+                Session::flash('update_error', 'Jumlah melebihi stok yang tersedia.');
+                return Redirect::route('pelanggan_data.cart');
+            }
+
+            $total_harga_baru = $jumlah_baru * $keranjang->harga_produk;
+            $keranjang->update([
+                'jumlah_produk' => $jumlah_baru,
+                'total_harga' => $total_harga_baru
+            ]);
+
+            if ($isAjax) {
+                return response()->json(['success' => true, 'message' => 'Jumlah produk berhasil diperbarui.']);
+            }
+            Session::flash('update_success', 'Jumlah produk berhasil diperbarui.');
+            return Redirect::route('pelanggan_data.cart');
+        }
+
+        $ukuran_baru = $request->input('ukuran_produk');
+        if ($ukuran_baru && $ukuran_baru != $keranjang->ukuran_produk) {
+            $stok_baru = M_Stok::where('id_stok', $keranjang->id_stok)->first();
+            if (!$stok_baru) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Ukuran produk tidak tersedia.'], 404);
+                }
+                Session::flash('hapus_error', 'Ukuran produk tidak tersedia.');
+                return Redirect::route('pelanggan_data.cart');
+            }
+
+            $jumlah_sekarang = $keranjang->jumlah_produk;
+            if ($jumlah_sekarang > $stok_baru->jumlah_stok_produk) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => 'Jumlah pesanan melebihi stok ukuran baru.'], 400);
+                }
+                Session::flash('update_error', 'Jumlah pesanan melebihi stok ukuran baru.');
+                return Redirect::route('pelanggan_data.cart');
+            }
+
+            $total_harga_baru = $jumlah_sekarang * $stok_baru->harga_produk;
+            $keranjang->update([
+                'id_stok' => $stok_baru->id_stok,
+                'ukuran_produk' => $ukuran_baru,
+                'harga_produk' => $stok_baru->harga_produk,
+                'total_harga' => $total_harga_baru
+            ]);
+
+            if ($isAjax) {
+                return response()->json(['success' => true, 'message' => 'Ukuran produk berhasil diperbarui.']);
+            }
+            Session::flash('update_success', 'Ukuran produk berhasil diperbarui.');
+            return Redirect::route('pelanggan_data.cart');
+        }
+
+        if ($isAjax) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada perubahan.']);
+        }
+        return Redirect::route('pelanggan_data.cart');
+    }
+
+    public function remove_from_cart($id_keranjang)
+    {
+        $this->M_Keranjang->delete_data($id_keranjang);
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Produk berhasil dihapus dari keranjang.']);
+        }
+
+        Session::flash('hapus_success', 'Produk berhasil dihapus dari keranjang.');
+        return Redirect::route('pelanggan_data.cart');
+    }
+
+    public function checkout(Request $request)
+    {
+        $session = session();
+        $idPelanggan = $session->get('id_pelanggan');
+        $dataPelanggan = M_Pelanggan::where('id_pelanggan', $idPelanggan)->first();
+
+        if (!$dataPelanggan) {
+            Session::flash('error', 'Data pelanggan tidak ditemukan. Silakan login kembali.');
+            return redirect()->route('pelanggan_data.cart');
+        }
+
+        $selectedProducts = $request->input('selected_products', []);
+
+        if (empty($selectedProducts)) {
+            Session::flash('error', 'Silakan pilih produk untuk checkout terlebih dahulu.');
+            return redirect()->route('pelanggan_data.cart');
+        }
+
+        $keranjangTerpilih = M_Keranjang::whereIn('id_keranjang', $selectedProducts)->get()->toArray();
+
+        if (empty($keranjangTerpilih)) {
+            Session::flash('error', 'Tidak ada item yang valid dalam keranjang.');
+            return redirect()->route('pelanggan_data.cart');
+        }
+
+        foreach ($keranjangTerpilih as &$item) {
+            $produk = DB::table('produk')
+                ->select('foto_produk')
+                ->where('nama_produk', $item['nama_produk'])
+                ->first();
+
+            $item['foto_produk'] = $produk ? $produk->foto_produk : null;
+
+            $hargaAktif = $this->hargaAktif($item['id_stok'], $item['harga_produk']);
+            $item['harga_produk'] = $hargaAktif['harga'];
+            $item['harga_flash'] = $hargaAktif['flash'];
+
+            $ukuranList = DB::table('stok_produk')
+                ->where('nama_produk', $item['nama_produk'])
+                ->pluck('ukuran_produk')
+                ->toArray();
+
+            $item['ukuran_list'] = $ukuranList;
+        }
+        unset($item);
+
+        $totalHarga = array_sum(array_map(function ($item) {
+            return $item['harga_produk'] * $item['jumlah_produk'];
+        }, $keranjangTerpilih));
+
+        $dataToko = M_Website::first();
+        $latitudeToko = $dataToko->latitude_pusat ?? -6.9175;
+        $longitudeToko = $dataToko->longitude_pusat ?? 107.6191;
+
+        $kodeKotaToko = $dataToko->kode_kota ?? '';
+        $namaKotaToko = $dataToko->nama_kota ?? '';
+
+        if (empty($kodeKotaToko) && $dataToko && !empty($dataToko->alamat_pusat)) {
+            try {
+                $ongkirModel = new M_OngkirApi();
+                $hasilCari = $ongkirModel->searchDestination(
+                    $dataToko->alamat_pusat,
+                    (float) $latitudeToko,
+                    (float) $longitudeToko
+                );
+                if (!isset($hasilCari['error']) && !empty($hasilCari)) {
+                    $kodeKotaToko = $hasilCari[0]['id'] ?? '';
+                    $namaKotaToko = $hasilCari[0]['subdistrict_name'] ?? ($hasilCari[0]['city_name'] ?? '');
+                }
+            } catch (\Throwable $e) {
+            }
+        }
+
+        $kodeKotaPelanggan = Session::get('kode_kota') ?? ($dataPelanggan->kode_kota ?? '');
+        $namaKotaPelanggan = Session::get('nama_kota') ?? ($dataPelanggan->nama_kota ?? '');
+        $alamatPelanggan = Session::get('alamat') ?? ($dataPelanggan->alamat ?? '');
+        $latitudePelanggan = Session::get('latitude') ?? ($dataPelanggan->latitude ?? '');
+        $longitudePelanggan = Session::get('longitude') ?? ($dataPelanggan->longitude ?? '');
+
+        $data = [
+            'title' => 'Checkout',
+            'title2' => 'Checkout',
+            'pelanggan' => $dataPelanggan,
+            'bank' => M_Bank::all(),
+            'kurir' => M_Kurir::all(),
+            'keranjang_terpilih' => $keranjangTerpilih,
+            'selected_products' => $selectedProducts,
+            'latitude_pusat' => $latitudeToko,
+            'longitude_pusat' => $longitudeToko,
+            'nama_toko' => $dataToko->nama_toko ?? '',
+            'alamat_toko' => $dataToko->alamat_pusat ?? '',
+            'kode_kota_toko' => $kodeKotaToko,
+            'nama_kota_toko' => $namaKotaToko,
+            'kode_kota_pelanggan' => $kodeKotaPelanggan,
+            'nama_kota_pelanggan' => $namaKotaPelanggan,
+            'alamat_pelanggan' => $alamatPelanggan,
+            'latitude_pelanggan' => $latitudePelanggan,
+            'longitude_pelanggan' => $longitudePelanggan,
+            'totalSemua' => $totalHarga,
+            'totalHarga' => $totalHarga,
+            'jenis_produk_dropdown' => $this->M_Home_toko->getJenisProdukDropdown(),
+            'user_logged_in' => $session->get('user_logged_in', false),
+        ];
+
+        return view('pelanggan.data_beli.v_beli', $data);
     }
 
     public function generateKodeTransaksi(Request $request)
@@ -722,11 +1006,11 @@ class Pelanggan_data extends WebsiteController
             'bank_tujuan' => 'required|string',
             'no_rek' => 'required|numeric',
             'selected_products' => 'required|array|min:1',
-            'selected_products.*' => 'exists:keranjang,id_keranjang', // validasi id_keranjang
+            'selected_products.*' => 'exists:keranjang,id_keranjang',
         ]);
 
         $waktu_sekarang = now();
-        $batas_waktu_bayar = $waktu_sekarang->copy()->addMinutes(10); // 10 menit untuk bayar
+        $batas_waktu_bayar = $waktu_sekarang->copy()->addMinutes(10);
 
         $kode_beli = $request->input('kode_beli');
         $alamat = $request->input('alamat');
@@ -740,11 +1024,9 @@ class Pelanggan_data extends WebsiteController
         $latitude = $request->input('latitude');
         $selectedProducts = $request->input('selected_products');
 
-        // Ambil nama pelanggan dari session
         $id_pelanggan = Session::get('id_pelanggan');
         $nama_pelanggan = Session::get('nama_pelanggan');
 
-        // Ambil data keranjang yang dipilih
         $keranjangItems = M_Keranjang::whereIn('id_keranjang', $selectedProducts)->get();
 
         if ($keranjangItems->isEmpty()) {
@@ -752,13 +1034,10 @@ class Pelanggan_data extends WebsiteController
             return redirect()->route('pelanggan_data.cart');
         }
 
-        // Validasi awal kupon SEBELUM membuat data pembayaran/pembelian
+        // Validasi kupon awal
         $kode_kupon = strtoupper(trim($request->input('kode_kupon', '')));
-        $diskon = 0;
         if ($kode_kupon !== '') {
-            $totalAwal = $keranjangItems->sum(function ($i) {
-                return ((float) $i->harga_produk) * ((int) $i->jumlah_produk);
-            });
+            $totalAwal = $keranjangItems->sum(fn($i) => (float) $i->harga_produk * (int) $i->jumlah_produk);
             $hasilKuponAwal = M_Kupon::validasiKupon($kode_kupon, $totalAwal);
             if (!$hasilKuponAwal['valid']) {
                 Session::flash('error', 'Kupon tidak dapat digunakan: ' . $hasilKuponAwal['message']);
@@ -769,40 +1048,22 @@ class Pelanggan_data extends WebsiteController
         // Kelompokkan per toko
         $itemsByToko = $keranjangItems->groupBy('nama_toko');
 
+        // ===== PHASE 1: VALIDASI & HITUNG TOTAL (tanpa simpan ke DB) =====
         $total_harga_all = 0;
         $total_berat_all = 0;
         $pesan_produk_all = "";
+        $itemsToProcess = []; // Store processed data for phase 2
+        $stokModel = new M_Stok();
 
-        // ✅ Buat pembayaran utama (satu untuk semua toko)
-        $pembayaran = M_Pembayaran::create([
-            'sesi_user' => $keranjangItems->first()->sesi_user,
-            'id_pelanggan' => $id_pelanggan,
-            'nama_pelanggan' => $nama_pelanggan,
-            'total_harga' => 0, // akan diupdate nanti
-            'ongkir' => $ongkir,
-            'total_bayar' => 0,
-            'bank_tujuan' => $bank_tujuan,
-            'no_rek' => $no_rek,
-            'a_n' => $a_n ?? '',
-            'batas_waktu_bayar' => $batas_waktu_bayar,
-        ]);
-
-        $id_bayar = $pembayaran->id_bayar;
-
-        // Proses per toko
         foreach ($itemsByToko as $nama_toko => $items) {
             $total_harga_toko = 0;
             $total_berat_toko = 0;
             $pesan_produk_toko = "";
+            $tokoItems = [];
 
             foreach ($items as $item) {
-                // Ambil data stok & produk berdasarkan id_stok dari keranjang
                 $stokData = DB::table('stok_produk')
-                    ->select(
-                        'stok_produk.*',
-                        'produk.foto_produk',
-                        'produk.nama_produk'
-                    )
+                    ->select('stok_produk.*', 'produk.foto_produk', 'produk.nama_produk')
                     ->leftJoin('produk', 'produk.nama_produk', '=', 'stok_produk.nama_produk')
                     ->where('stok_produk.id_stok', $item->id_stok)
                     ->first();
@@ -812,81 +1073,26 @@ class Pelanggan_data extends WebsiteController
                     return redirect()->route('pelanggan_data.cart');
                 }
 
-                // Validasi stok cukup
                 if ($stokData->jumlah_stok_produk < $item->jumlah_produk) {
                     Session::flash('error', "Stok tidak cukup untuk: {$item->nama_produk} ({$item->ukuran_produk})");
                     return redirect()->route('pelanggan_data.cart');
                 }
 
-                // Harga aktif (flash sale bila berlaku)
                 $hargaAktif = $this->hargaAktif($item->id_stok, $item->harga_produk);
-
                 $subtotal_harga = $hargaAktif['harga'] * $item->jumlah_produk;
                 $subtotal_berat = $item->berat_produk * $item->jumlah_produk;
-
-                if ($hargaAktif['flash']) {
-                    $this->tambahTerjualFlashSale($item->id_stok, $item->jumlah_produk);
-                }
 
                 $total_harga_toko += $subtotal_harga;
                 $total_berat_toko += $subtotal_berat;
 
-                // Kurangi stok
-                $stokModel = new M_Stok();
-                $result = $stokModel->kurangiStokFIFO($item->nama_produk, $item->jumlah_produk);
-                if (!$result['success']) {
-                    Session::flash('error', $result['message']);
-                    return redirect()->route('pelanggan_data.cart');
-                }
+                $tokoItems[] = [
+                    'item' => $item,
+                    'stokData' => $stokData,
+                    'hargaAktif' => $hargaAktif,
+                    'subtotal_harga' => $subtotal_harga,
+                    'subtotal_berat' => $subtotal_berat,
+                ];
 
-                // Simpan ke pembelian
-                $pembelian = M_Pembelian::create([
-                    'kode_beli' => $kode_beli,
-                    'id_bayar' => $id_bayar,
-                    'sesi_user' => $item->sesi_user,
-                    'nama_toko' => $nama_toko,
-                    'id_pelanggan' => $id_pelanggan,
-                    'nama_pelanggan' => $nama_pelanggan,
-                    'id_stok' => $item->id_stok,
-                    'nama_produk' => $item->nama_produk,
-                    'ukuran_produk' => $item->ukuran_produk,
-                    'jumlah_produk' => $item->jumlah_produk,
-                    'satuan_produk' => $item->satuan_produk,
-                    'satuan_berat' => $item->satuan_berat,
-                    'total_harga' => $subtotal_harga,
-                    'total_berat' => $subtotal_berat,
-                    'waktu_pembelian' => $waktu_sekarang,
-                    'status_beli' => 'Ditunda',
-                ]);
-
-                // Update status keranjang
-                M_Keranjang::where('id_keranjang', $item->id_keranjang)->update([
-                    'status_keranjang' => 'Selesai'
-                ]);
-
-                // Generate kode resi unik per toko
-                $inisial_toko = implode('', array_map(fn($part) => strtoupper(substr($part, 0, 1)), explode(' ', $nama_toko)));
-                $kode_resi = $inisial_toko . now()->format('YmdHis') . Str::random(6);
-
-                // Simpan ekspedisi
-                M_Ekspedisi::create([
-                    'id_beli' => $pembelian->id_beli,
-                    'id_bayar' => $id_bayar,
-                    'kode_resi' => $kode_resi,
-                    'nama_toko' => $nama_toko,
-                    'id_pelanggan' => $id_pelanggan,
-                    'nama_pelanggan' => $nama_pelanggan,
-                    'sesi_user' => $keranjangItems->first()->sesi_user,
-                    'longitude' => $longitude ?? '',
-                    'latitude' => $latitude ?? '',
-                    'alamat' => $alamat,
-                    'jenis_kurir' => $jenis_kurir ?? '',
-                    'ongkir' => $ongkir,
-                    'estimasi_waktu' => $estimasi_waktu ?? '',
-                    'status_kirim' => 'Pesanan dibuat',
-                ]);
-
-                // Pesan WA
                 $pesan_produk_toko .= "🛒 *Produk:* {$item->nama_produk}\n";
                 $pesan_produk_toko .= "📏 *Ukuran:* {$item->ukuran_produk}\n";
                 $pesan_produk_toko .= "🔢 *Jumlah:* {$item->jumlah_produk} {$item->satuan_produk}\n";
@@ -896,10 +1102,12 @@ class Pelanggan_data extends WebsiteController
             $total_harga_all += $total_harga_toko;
             $total_berat_all += $total_berat_toko;
             $pesan_produk_all .= "📦 *Dari Toko: {$nama_toko}*\n" . $pesan_produk_toko . "\n";
+            $itemsToProcess[$nama_toko] = $tokoItems;
         }
 
-        // Validasi kupon (server-side, kuota baru dihitung saat order sukses dibuat)
+        // Validasi kupon final
         $diskon = 0;
+        $hasilKupon = null;
         if ($kode_kupon !== '') {
             $hasilKupon = M_Kupon::validasiKupon($kode_kupon, $total_harga_all);
             if ($hasilKupon['valid']) {
@@ -907,46 +1115,141 @@ class Pelanggan_data extends WebsiteController
             }
         }
 
-        // Update total pembayaran
-        $pembayaran->update([
-            'total_harga' => $total_harga_all,
-            'kode_kupon' => $kode_kupon !== '' ? $kode_kupon : null,
-            'diskon' => $diskon,
-            'total_bayar' => max(0, $total_harga_all + $ongkir - $diskon),
-        ]);
-
-        // Kupon dihitung terpakai setelah order berhasil dibuat
-        if ($diskon > 0 && !empty($hasilKupon['kupon'])) {
-            M_Kupon::gunakanKupon($hasilKupon['kupon']->id_kupon);
-        }
-
         $total_bayar_akhir = max(0, $total_harga_all + $ongkir - $diskon);
 
-        // Buat pesan WhatsApp
-        $pesan = "Assalamu'alaikum, Halo Admin 👋\n\n";
-        $pesan .= "Saya atas nama *$nama_pelanggan* ingin menyampaikan rincian pembelian dengan kode transaksi *$kode_beli* sebagai berikut:\n\n";
-        $pesan .= $pesan_produk_all;
-        if ($diskon > 0) {
-            $pesan .= "🎟️ *Kupon:* {$kode_kupon} (Diskon Rp. " . number_format($diskon, 0, ',', '.') . ")\n";
+        // ===== PHASE 2: SIMPAN SEMUA DALAM TRANSAKSI =====
+        try {
+            DB::transaction(function () use (
+                $itemsToProcess, $itemsByToko, $keranjangItems,
+                $id_pelanggan, $nama_pelanggan, $kode_beli, $alamat,
+                $bank_tujuan, $no_rek, $a_n, $jenis_kurir, $ongkir,
+                $estimasi_waktu, $longitude, $latitude, $waktu_sekarang,
+                $batas_waktu_bayar, $kode_kupon, $diskon, $total_harga_all,
+                $total_bayar_akhir, $pesan_produk_all, $stokModel, $hasilKupon
+            ) {
+                // 1. Buat pembayaran dengan total yang sudah dihitung
+                $pembayaran = M_Pembayaran::create([
+                    'sesi_user' => $keranjangItems->first()->sesi_user,
+                    'id_pelanggan' => $id_pelanggan,
+                    'nama_pelanggan' => $nama_pelanggan,
+                    'total_harga' => $total_harga_all,
+                    'ongkir' => $ongkir,
+                    'kode_kupon' => $kode_kupon !== '' ? $kode_kupon : null,
+                    'diskon' => $diskon,
+                    'total_bayar' => $total_bayar_akhir,
+                    'bank_tujuan' => $bank_tujuan,
+                    'no_rek' => $no_rek,
+                    'a_n' => $a_n ?? '',
+                    'batas_waktu_bayar' => $batas_waktu_bayar,
+                ]);
+
+                $id_bayar = $pembayaran->id_bayar;
+                $sesi_user = $keranjangItems->first()->sesi_user;
+
+                // 2. Proses per toko
+                foreach ($itemsToProcess as $nama_toko => $tokoItems) {
+                    foreach ($tokoItems as $data) {
+                        $item = $data['item'];
+                        $stokData = $data['stokData'];
+                        $hargaAktif = $data['hargaAktif'];
+                        $subtotal_harga = $data['subtotal_harga'];
+                        $subtotal_berat = $data['subtotal_berat'];
+
+                        if ($hargaAktif['flash']) {
+                            $this->tambahTerjualFlashSale($item->id_stok, $item->jumlah_produk);
+                        }
+
+                        // Kurangi stok (sudah pakai lockForUpdate di model)
+                        $result = $stokModel->kurangiStokFIFO($item->nama_produk, $item->jumlah_produk);
+                        if (!$result['success']) {
+                            throw new \Exception($result['message']);
+                        }
+
+                        // Simpan pembelian
+                        $pembelian = M_Pembelian::create([
+                            'kode_beli' => $kode_beli,
+                            'id_bayar' => $id_bayar,
+                            'sesi_user' => $item->sesi_user,
+                            'nama_toko' => $nama_toko,
+                            'id_pelanggan' => $id_pelanggan,
+                            'nama_pelanggan' => $nama_pelanggan,
+                            'id_stok' => $item->id_stok,
+                            'nama_produk' => $item->nama_produk,
+                            'ukuran_produk' => $item->ukuran_produk,
+                            'jumlah_produk' => $item->jumlah_produk,
+                            'satuan_produk' => $item->satuan_produk,
+                            'satuan_berat' => $item->satuan_berat,
+                            'total_harga' => $subtotal_harga,
+                            'total_berat' => $subtotal_berat,
+                            'waktu_pembelian' => $waktu_sekarang,
+                            'status_beli' => 'Ditunda',
+                        ]);
+
+                        // Update status keranjang
+                        M_Keranjang::where('id_keranjang', $item->id_keranjang)->update([
+                            'status_keranjang' => 'Selesai'
+                        ]);
+
+                        // Generate kode resi
+                        $inisial_toko = implode('', array_map(fn($part) => strtoupper(substr($part, 0, 1)), explode(' ', $nama_toko)));
+                        $kode_resi = $inisial_toko . now()->format('YmdHis') . Str::random(6);
+
+                        // Simpan ekspedisi
+                        M_Ekspedisi::create([
+                            'id_beli' => $pembelian->id_beli,
+                            'id_bayar' => $id_bayar,
+                            'kode_resi' => $kode_resi,
+                            'nama_toko' => $nama_toko,
+                            'id_pelanggan' => $id_pelanggan,
+                            'nama_pelanggan' => $nama_pelanggan,
+                            'sesi_user' => $sesi_user,
+                            'longitude' => $longitude ?? '',
+                            'latitude' => $latitude ?? '',
+                            'alamat' => $alamat,
+                            'jenis_kurir' => $jenis_kurir ?? '',
+                            'ongkir' => $ongkir,
+                            'estimasi_waktu' => $estimasi_waktu ?? '',
+                            'status_kirim' => 'Pesanan dibuat',
+                        ]);
+                    }
+                }
+
+                // 3. Kupon dihitung terpakai setelah order sukses
+                if ($diskon > 0 && !empty($hasilKupon['kupon'])) {
+                    M_Kupon::gunakanKupon($hasilKupon['kupon']->id_kupon);
+                }
+            });
+
+            // Buat pesan WhatsApp
+            $pesan = "Assalamu'alaikum, Halo Admin 👋\n\n";
+            $pesan .= "Saya atas nama *$nama_pelanggan* ingin menyampaikan rincian pembelian dengan kode transaksi *$kode_beli* sebagai berikut:\n\n";
+            $pesan .= $pesan_produk_all;
+            if ($diskon > 0) {
+                $pesan .= "🎟️ *Kupon:* {$kode_kupon} (Diskon Rp. " . number_format($diskon, 0, ',', '.') . ")\n";
+            }
+            $pesan .= "💳 *Total Bayar:* Rp. " . number_format($total_bayar_akhir, 0, ',', '.') . "\n";
+            $pesan .= "📌 *Status:* Belum Bayar\n";
+            $pesan .= "🚚 *Kurir:* " . ($jenis_kurir ?? '-') . "\n";
+            $pesan .= "📍 *Alamat:* $alamat\n";
+
+            $wa_pusat = config('app.wa_pusat') ?? '081234567890';
+            $wa_pusat = preg_replace('/[^0-9]/', '', $wa_pusat);
+            $wa_pusat = ltrim($wa_pusat, '0');
+            $wa_pusat = '62' . $wa_pusat;
+
+            $pesan_encoded = rawurlencode($pesan);
+            $link_wa = "https://wa.me/$wa_pusat?text=$pesan_encoded";
+
+            Session::flash('pesan_beli', 'Pembelian berhasil! Silakan lakukan pembayaran.');
+            Session::flash('link_wa', $link_wa);
+
+            return redirect()->route('pelanggan_data.statusBayar');
+
+        } catch (\Exception $e) {
+            \Log::error('SaveBeli Error: ' . $e->getMessage());
+            Session::flash('error', 'Terjadi kesalahan saat memproses pesanan: ' . $e->getMessage());
+            return redirect()->route('pelanggan_data.cart');
         }
-        $pesan .= "💳 *Total Bayar:* Rp. " . number_format($total_bayar_akhir, 0, ',', '.') . "\n";
-        $pesan .= "📌 *Status:* Belum Bayar\n";
-        $pesan .= "🚚 *Kurir:* " . ($jenis_kurir ?? '-') . "\n";
-        $pesan .= "📍 *Alamat:* $alamat\n";
-
-        // Format nomor WA
-        $wa_pusat = config('app.wa_pusat') ?? '081234567890';
-        $wa_pusat = preg_replace('/[^0-9]/', '', $wa_pusat);
-        $wa_pusat = ltrim($wa_pusat, '0');
-        $wa_pusat = '62' . $wa_pusat;
-
-        $pesan_encoded = rawurlencode($pesan);
-        $link_wa = "https://wa.me/$wa_pusat?text=$pesan_encoded";
-
-        Session::flash('pesan_beli', 'Pembelian berhasil! Silakan lakukan pembayaran.');
-        Session::flash('link_wa', $link_wa);
-
-        return redirect()->route('pelanggan_data.statusBayar');
     }
 
     public function beliLangsung(Request $request, $id_stok)
@@ -1176,7 +1479,7 @@ class Pelanggan_data extends WebsiteController
 
         $total_bayar = max(0, $subtotal_harga + $ongkir - $diskon);
 
-        if ($total_bayar != $total_bayar) {
+        if (is_nan($total_bayar) || $total_bayar < 0) {
             return response()->json(['error' => 'Total bayar tidak valid.'], 422);
         }
 

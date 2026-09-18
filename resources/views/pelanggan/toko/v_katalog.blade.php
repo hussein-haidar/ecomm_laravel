@@ -1,52 +1,313 @@
 @extends('layouts.app')
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hero carousel auto-slide
+        const carousel = document.getElementById('promoCarousel');
+        if (carousel) {
+            const bsCarousel = new bootstrap.Carousel(carousel, {
+                interval: 5000,
+                ride: 'carousel',
+                pause: 'hover',
+                wrap: true
+            });
+        }
+
+        // Filter form auto-submit on change (for select inputs)
+        document.querySelectorAll('#filterForm select').forEach(select => {
+            select.addEventListener('change', function() {
+                this.form.submit();
+            });
+        });
+
+        // Mobile filter sheet toggle
+        window.openFilterSheet = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const sheet = document.getElementById('filterSheet');
+            const overlay = document.getElementById('filterSheetOverlay');
+            if (sheet && overlay) {
+                sheet.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        };
+
+        window.closeFilterSheet = function() {
+            const sheet = document.getElementById('filterSheet');
+            const overlay = document.getElementById('filterSheetOverlay');
+            if (sheet && overlay) {
+                sheet.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        };
+
+        // Close filter on escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                window.closeFilterSheet();
+            }
+        });
+
+        // Price range validation
+        const hargaMin = document.querySelector('input[name="harga_min"]');
+        const hargaMax = document.querySelector('input[name="harga_max"]');
+        if (hargaMin && hargaMax) {
+            hargaMax.addEventListener('input', function() {
+                if (parseInt(this.value) < parseInt(hargaMin.value || 0)) {
+                    hargaMin.value = this.value;
+                }
+            });
+            hargaMin.addEventListener('input', function() {
+                if (parseInt(this.value) > parseInt(hargaMax.value || 999999999)) {
+                    hargaMax.value = this.value;
+                }
+            });
+        }
+    });
+</script>
+@endpush
 
 @section('content')
-
-<!-- Banner Promo (Event) Section -->
-@php $promoTerbaru = collect($data_carousel ?? [])->take(3); @endphp
-@if (!empty($data_carousel) && count($promoTerbaru) > 0)
-  <div class="promo-section">
-    <div class="container-promo">
-        <div class="promo-carousel" id="promoCarousel">
-            @php $index = 0; @endphp
-            @foreach ($promoTerbaru as $promo)
-                @foreach ($promo->all_images as $gambar)
-                    <img
-                        src="{{ asset($gambar) }}"
-                        class="carousel-img {{ $index === 0 ? 'active' : '' }}"
-                        alt="{{ $promo->nama_promo }}"
-                        data-promo-id="{{ $promo->id_promo }}"
-                    >
-                    @php $index++; @endphp
-                @endforeach
-            @endforeach
-            <!-- Indikator Titik (navigasi) -->
-            <div class="carousel-dots" id="carouselDots">
-                @php $dotIndex = 0; @endphp
-                @foreach ($promoTerbaru as $promo)
-                    @foreach ($promo->all_images as $gambar)
-                        <span
-                            class="dot {{ $dotIndex === 0 ? 'active' : '' }}"
-                            data-slide-to="{{ $dotIndex }}"
-                        ></span>
-                        @php $dotIndex++; @endphp
+<!-- Hero/Promo Section -->
+@if(!empty($data_carousel) && count($data_carousel) > 0)
+    <section class="promo-section position-relative" aria-label="Promo Banner">
+        <div class="container">
+            <div id="promoCarousel" class="carousel slide rounded-4 overflow-hidden shadow-lg" data-bs-ride="carousel" data-bs-interval="5000" data-bs-pause="hover">
+                <div class="carousel-inner">
+                    @php $slideIndex = 0; @endphp
+                    @foreach($data_carousel as $promo)
+                        @foreach($promo->all_images as $image)
+                            <div class="carousel-item {{ $slideIndex === 0 ? 'active' : '' }}" data-aos="fade-up" data-aos-duration="600">
+                                <img src="{{ asset($image) }}" class="d-block w-100" alt="{{ $promo->nama_promo }}" style="height: 400px; object-fit: cover;">
+                                <div class="carousel-caption d-none d-md-block text-start" style="bottom: 15%;">
+                                    <div class="bg-dark bg-opacity-75 rounded-4 p-4" style="max-width: 90%;">
+                                        <span class="badge bg-danger mb-2 px-3 py-1">{{ $promo->nama_promo }}</span>
+                                        <h4 class="fw-bold mb-2">{{ $promo->deskripsi_promo ?? 'Promo Spesial' }}</h4>
+                                        <a href="{{ route('home_toko.katalog') }}" class="btn btn-light btn-sm rounded-pill px-4">
+                                            <i class="fas fa-shopping-bag me-1"></i>Belanja Sekarang
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @php $slideIndex++; @endphp
+                        @endforeach
                     @endforeach
-                @endforeach
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev" aria-label="Previous">
+                    <span class="carousel-control-prev-icon bg-primary rounded-circle p-3" style="background-size: 60%;"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next" aria-label="Next">
+                    <span class="carousel-control-next-icon bg-primary rounded-circle p-3" style="background-size: 60%;"></span>
+                </button>
+                <div class="carousel-indicators">
+                    @for($i = 0; $i < $slideIndex; $i++)
+                        <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="{{ $i }}" class="{{ $i === 0 ? 'active' : '' }}" aria-label="Slide {{ $i + 1 }}"></button>
+                    @endfor
+                </div>
+            </div>
+        </div>
+    </section>
+@endif
+
+<!-- Filter & Product Section -->
+<section class="py-4" aria-labelledby="katalog-title">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar Filter (Desktop) -->
+            <aside class="col-lg-3 d-none d-lg-block" data-aos="fade-right">
+                <div class="card border-0 shadow-sm sticky-top" style="top: 100px; z-index: 100;">
+                    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-filter me-2 text-primary"></i>Filter Produk</h5>
+                        <a href="{{ route('home_toko.katalog') }}" class="btn btn-sm btn-outline-secondary rounded-pill">Reset</a>
+                    </div>
+                    <div class="card-body">
+                        <form id="filterForm" method="GET" action="{{ route('home_toko.katalog') }}">
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Cari Produk</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                    <input type="text" name="keyword" class="form-control border-start-0" placeholder="Cari..." value="{{ request('keyword') }}">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="jenis_produk" class="form-label fw-medium">Kategori</label>
+                                <select name="jenis_produk" id="jenis_produk" class="form-select form-select-sm">
+                                    <option value="">Semua Kategori</option>
+                                    @foreach($jenis_produk_dropdown ?? [] as $jenis)
+                                        <option value="{{ $jenis['jenis_produk'] }}" {{ request('jenis_produk') == $jenis['jenis_produk'] ? 'selected' : '' }}>
+                                            {{ $jenis['jenis_produk'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Rentang Harga</label>
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="harga_min" class="form-control" placeholder="Min" value="{{ request('harga_min') }}" min="0">
+                                    <span class="input-group-text">-</span>
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" name="harga_max" class="form-control" placeholder="Max" value="{{ request('harga_max') }}" min="0">
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-medium">Urutkan</label>
+                                <select name="sort_harga" class="form-select form-select-sm mb-2">
+                                    <option value="" {{ request('sort_harga') == '' && request('sort_nama') == '' ? 'selected' : '' }}>Default</option>
+                                    <option value="asc" {{ request('sort_harga') == 'asc' ? 'selected' : '' }}>Harga Terendah</option>
+                                    <option value="desc" {{ request('sort_harga') == 'desc' ? 'selected' : '' }}>Harga Tertinggi</option>
+                                </select>
+                                <select name="sort_nama" class="form-select form-select-sm">
+                                    <option value="" {{ request('sort_nama') == '' && request('sort_harga') == '' ? 'selected' : '' }}>Nama A-Z</option>
+                                    <option value="a-z" {{ request('sort_nama') == 'a-z' ? 'selected' : '' }}>Nama A - Z</option>
+                                    <option value="z-a" {{ request('sort_nama') == 'z-a' ? 'selected' : '' }}>Nama Z - A</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold">
+                                <i class="fas fa-filter me-1"></i>Terapkan Filter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Products Area -->
+            <div class="col-lg-9">
+                <!-- Mobile Filter Trigger -->
+                <div class="d-lg-none mb-3" data-aos="fade-up">
+                    <button type="button" class="btn btn-outline-primary w-100 rounded-pill py-2 fw-semibold" onclick="openFilterSheet(event)">
+                        <i class="fas fa-filter me-2"></i>Filter Produk
+                    </button>
+                </div>
+
+                <!-- Results Header -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4" data-aos="fade-up">
+                    <div>
+                        <h2 id="katalog-title" class="fw-bold mb-1 text-dark">Katalog Produk</h2>
+                        <p class="text-muted mb-0">
+                            @php
+                                $totalProduk = count($produk_data ?? []);
+                                $filters = [];
+                                if(request('keyword')) $filters[] = 'kata kunci: "'.request('keyword').'"';
+                                if(request('jenis_produk')) $filters[] = 'kategori: "'.request('jenis_produk').'"';
+                                if(request('harga_min') || request('harga_max')) $filters[] = 'harga: '.(request('harga_min') ? 'Rp'.number_format(request('harga_min'),0,',','.') : '').' - '.(request('harga_max') ? 'Rp'.number_format(request('harga_max'),0,',','.') : '');
+                            @endphp
+                            Menampilkan <strong>{{ $totalProduk }}</strong> produk
+                            @if(!empty($filters))
+                                ({{ implode(', ', $filters) }})
+                            @endif
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-start-pill {{ !request('view') || request('view') == 'grid' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->query()->all(), ['view' => 'grid'])) }}'" aria-label="Grid View">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-end-pill {{ request('view') == 'list' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->query()->all(), ['view' => 'list'])) }}'" aria-label="List View">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Product Grid -->
+                <div class="row g-4" id="productGrid">
+                    @if(empty($produk_data))
+                        <div class="col-12 text-center py-5" data-aos="fade-up">
+                            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                            <h4 class="text-muted">Tidak Ada Produk</h4>
+                            <p class="text-muted">Tidak ditemukan produk yang sesuai dengan kriteria pencarian Anda.</p>
+                            <a href="{{ route('home_toko.katalog') }}" class="btn btn-primary rounded-pill px-4 mt-3">
+                                <i class="fas fa-arrow-left me-1"></i>Lihat Semua Produk
+                            </a>
+                        </div>
+                    @else
+                        @foreach($produk_data as $produk)
+                            @include('layouts.v_produk_item', ['produk' => $produk, 'loop' => $loop])
+                        @endforeach
+                    @endif
+                </div>
+
+                <!-- Pagination -->
+                @if($produk_data instanceof \Illuminate\Pagination\LengthAwarePaginator && $produk_data->lastPage() > 1)
+                    <nav aria-label="Pagination" class="mt-5" data-aos="fade-up">
+                        <div class="d-flex justify-content-center">
+                            {{ $produk_data->appends(request()->query())->links('pagination::bootstrap-5') }}
+                        </div>
+                    </nav>
+                @endif
             </div>
         </div>
     </div>
-  </div>
-@endif
+</section>
 
-<!-- Product Section -->
-  <main class="product-section">
-    <div class="container-product">
-        <h3 class="product-title">Katalog Produk</h3>
-        <div class="product-grid">
-            @include('layouts.v_produk')
-        </div>
+<!-- Mobile Filter Bottom Sheet -->
+<div class="filter-sheet-overlay" id="filterSheetOverlay" onclick="closeFilterSheet()" aria-hidden="true"></div>
+<div class="filter-sheet" id="filterSheet" role="dialog" aria-modal="true" aria-labelledby="filterSheetTitle">
+    <div class="filter-sheet-handle" onclick="closeFilterSheet()" aria-label="Tutup filter"></div>
+    <div class="filter-sheet-header d-flex justify-content-between align-items-center">
+        <h5 id="filterSheetTitle" class="filter-sheet-title fw-bold mb-0"><i class="fas fa-filter me-2"></i>Filter Produk</h5>
+        <button type="button" class="btn-close" onclick="closeFilterSheet()" aria-label="Tutup filter"></button>
     </div>
-  </main>
-    
-    @endsection
-
+    <div class="filter-sheet-body p-4">
+        <form method="GET" action="{{ route('home_toko.katalog') }}">
+            <div class="mb-3">
+                <label class="form-label fw-medium">Cari Produk</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="keyword" class="form-control" placeholder="Cari..." value="{{ request('keyword') }}">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="jenis_produk_mobile" class="form-label fw-medium">Kategori</label>
+                <select name="jenis_produk" id="jenis_produk_mobile" class="form-select">
+                    <option value="">Semua Kategori</option>
+                    @foreach($jenis_produk_dropdown ?? [] as $jenis)
+                        <option value="{{ $jenis['jenis_produk'] }}" {{ request('jenis_produk') == $jenis['jenis_produk'] ? 'selected' : '' }}>
+                            {{ $jenis['jenis_produk'] }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">Rentang Harga</label>
+                <div class="input-group">
+                    <span class="input-group-text">Rp</span>
+                    <input type="number" name="harga_min" class="form-control" placeholder="Min" value="{{ request('harga_min') }}" min="0">
+                    <span class="input-group-text">-</span>
+                    <span class="input-group-text">Rp</span>
+                    <input type="number" name="harga_max" class="form-control" placeholder="Max" value="{{ request('harga_max') }}" min="0">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">Urutkan Harga</label>
+                <select name="sort_harga" class="form-select">
+                    <option value="" {{ request('sort_harga') == '' ? 'selected' : '' }}>Default</option>
+                    <option value="asc" {{ request('sort_harga') == 'asc' ? 'selected' : '' }}>Terendah</option>
+                    <option value="desc" {{ request('sort_harga') == 'desc' ? 'selected' : '' }}>Tertinggi</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-medium">Urutkan Nama</label>
+                <select name="sort_nama" class="form-select">
+                    <option value="" {{ request('sort_nama') == '' ? 'selected' : '' }}>Default</option>
+                    <option value="a-z" {{ request('sort_nama') == 'a-z' ? 'selected' : '' }}>A - Z</option>
+                    <option value="z-a" {{ request('sort_nama') == 'z-a' ? 'selected' : '' }}>Z - A</option>
+                </select>
+            </div>
+            <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill py-2 fw-semibold">
+                    <i class="fas fa-filter me-1"></i>Terapkan Filter
+                </button>
+                <a href="{{ route('home_toko.katalog') }}" class="btn btn-outline-secondary rounded-pill py-2">Reset Filter</a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

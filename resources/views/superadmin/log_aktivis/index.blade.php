@@ -5,7 +5,7 @@
     <h2>Daftar Log Aktivitas</h2>
 
     <!-- Form Hapus Berdasarkan Waktu -->
-    <form action="{{ route('superadmin.deleteByDate') }}" method="POST" class="mb-4">
+    <form action="{{ route('superadmin_data.deleteByDate') }}" method="POST" class="mb-4">
         @csrf
         <div class="row">
             <div class="col-md-4">

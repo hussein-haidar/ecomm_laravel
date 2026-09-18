@@ -1,0 +1,149 @@
+<footer class="footer-modern" role="contentinfo">
+    <div class="container">
+        <div class="row g-4">
+            <!-- About -->
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-widget">
+                    <div class="footer-brand mb-3">
+                        @if($dataWebsite['logo_website'])
+                            <img src="{{ asset('logo_website/' . $dataWebsite['logo_website']) }}" alt="Logo {{ $dataWebsite['nama_toko'] }}" width="40" height="40" class="rounded-circle me-2">
+                        @else
+                            <i class="fas fa-store text-primary me-2" style="font-size: 1.5rem;"></i>
+                        @endif
+                        <span class="fw-bold fs-5">{{ $dataWebsite['nama_toko'] }}</span>
+                    </div>
+                    <p class="text-muted small mb-3">{{ $dataWebsite['deskripsi_toko'] ?? 'Toko online terpercaya dengan berbagai produk berkualitas.' }}</p>
+                    
+                    <!-- Social Links -->
+                    <div class="social-links d-flex gap-3">
+                        <a href="{{ config('settings.instagram_link', '#') }}" target="_blank" class="social-btn instagram" title="Instagram" aria-label="Instagram">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="{{ config('settings.facebook_link', '#') }}" target="_blank" class="social-btn facebook" title="Facebook" aria-label="Facebook">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="{{ config('settings.tiktok_link', '#') }}" target="_blank" class="social-btn tiktok" title="TikTok" aria-label="TikTok">
+                            <i class="fab fa-tiktok"></i>
+                        </a>
+                        <a href="{{ config('settings.whatsapp_link', '#') }}" target="_blank" class="social-btn whatsapp" title="WhatsApp" aria-label="WhatsApp">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-lg-2 col-md-6">
+                <div class="footer-widget">
+                    <h5 class="footer-title">Menu Cepat</h5>
+                    <ul class="footer-links list-unstyled">
+                        <li><a href="{{ url('/') }}"><i class="fas fa-chevron-right me-2"></i>Beranda</a></li>
+                        <li><a href="{{ route('home_toko.katalog') }}"><i class="fas fa-chevron-right me-2"></i>Katalog Produk</a></li>
+                        <li><a href="{{ route('home_toko.syaket') }}"><i class="fas fa-chevron-right me-2"></i>Syarat & Ketentuan</a></li>
+                        <li><a href="{{ route('home_toko.bantuan') }}"><i class="fas fa-chevron-right me-2"></i>Bantuan / FAQ</a></li>
+                        @if(session('user_logged_in'))
+                            <li><a href="{{ route('pelanggan_data.cart') }}"><i class="fas fa-chevron-right me-2"></i>Keranjang</a></li>
+                            <li><a href="{{ route('pelanggan_data.riwayatBeli') }}"><i class="fas fa-chevron-right me-2"></i>Riwayat Beli</a></li>
+                        @endif
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Customer Service -->
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-widget">
+                    <h5 class="footer-title">Layanan Pelanggan</h5>
+                    <ul class="footer-links list-unstyled">
+                        <li><a href="{{ route('pelanggan_data.profil') }}"><i class="fas fa-chevron-right me-2"></i>Profil Saya</a></li>
+                        <li><a href="{{ route('pelanggan_data.statusBayar') }}"><i class="fas fa-chevron-right me-2"></i>Status Pembayaran</a></li>
+                        <li><a href="{{ route('pelanggan_data.statusKirim') }}"><i class="fas fa-chevron-right me-2"></i>Pelacakan Pengiriman</a></li>
+                        <li><a href="{{ route('pelanggan_data.wishlist') }}"><i class="fas fa-chevron-right me-2"></i>Wishlist</a></li>
+                        <li><a href="#" onclick="window.bukaChat && bukaChat()"><i class="fas fa-chevron-right me-2"></i>Chat Penjual</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="col-lg-3 col-md-6">
+                <div class="footer-widget">
+                    <h5 class="footer-title">Kontak Kami</h5>
+                    <ul class="footer-contact list-unstyled">
+                        <li class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fas fa-map-marker-alt text-primary mt-1"></i>
+                            <span class="text-muted small">{{ $dataWebsite['alamat_pusat'] ?? 'Indonesia' }}</span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fas fa-phone-alt text-primary mt-1"></i>
+                            <span class="text-muted small">
+                                <a href="tel:{{ $dataWebsite['wa_pusat'] ?? '081234567890' }}" class="text-muted text-decoration-none">
+                                    {{ $dataWebsite['wa_pusat'] ?? '0812-3456-7890' }}
+                                </a>
+                            </span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2 mb-2">
+                            <i class="fas fa-envelope text-primary mt-1"></i>
+                            <span class="text-muted small">
+                                <a href="mailto:{{ $dataWebsite['email_toko'] ?? 'info@tokokita.com' }}" class="text-muted text-decoration-none">
+                                    {{ $dataWebsite['email_toko'] ?? 'info@tokokita.com' }}
+                                </a>
+                            </span>
+                        </li>
+                        <li class="d-flex align-items-start gap-2">
+                            <i class="fas fa-clock text-primary mt-1"></i>
+                            <span class="text-muted small">Senin - Minggu: 08.00 - 22.00 WIB</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="footer-bottom mt-5 pt-4 border-top">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-muted small">
+                        &copy; {{ date('Y') }} <strong>{{ $dataWebsite['nama_toko'] }}</strong>. Hak Cipta Dilindungi.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="d-flex justify-content-md-end gap-3 flex-wrap">
+                        <a href="#" class="text-muted small text-decoration-none">Kebijakan Privasi</a>
+                        <a href="#" class="text-muted small text-decoration-none">Syarat Penggunaan</a>
+                        <a href="#" class="text-muted small text-decoration-none">Kebijakan Pengembalian</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Back to Top Button -->
+<button class="btn btn-primary rounded-circle position-fixed bottom-0 end-0 m-4 shadow-lg back-to-top" 
+        onclick="window.scrollTo({top: 0, behavior: 'smooth'})" 
+        aria-label="Kembali ke atas" 
+        style="display: none; width: 50px; height: 50px; z-index: 1000;">
+    <i class="fas fa-arrow-up"></i>
+</button>
+
+<script>
+    // Back to top button visibility
+    window.addEventListener('scroll', function() {
+        const btn = document.querySelector('.back-to-top');
+        if (window.scrollY > 300) {
+            btn.style.display = 'flex';
+        } else {
+            btn.style.display = 'none';
+        }
+    }, { passive: true });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+</script>

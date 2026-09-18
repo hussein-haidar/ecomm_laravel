@@ -111,61 +111,64 @@ class M_Stok extends Model
 
     public function kurangiStokFIFO($nama_produk, $jumlah)
     {
-        $stokList = DB::table('stok_produk')
-            ->where('nama_produk', $nama_produk)
-            ->where('jumlah_stok_produk', '>', 0)
-            ->orderBy('tanggal_masuk_produk', 'ASC')
-            ->get();
+        return DB::transaction(function () use ($nama_produk, $jumlah) {
+            $stokList = DB::table('stok_produk')
+                ->where('nama_produk', $nama_produk)
+                ->where('jumlah_stok_produk', '>', 0)
+                ->orderBy('tanggal_masuk_produk', 'ASC')
+                ->lockForUpdate()
+                ->get();
 
-        if ($stokList->isEmpty()) {
-            return ['success' => false, 'message' => 'Stok tidak tersedia untuk produk: ' . $nama_produk];
-        }
+            if ($stokList->isEmpty()) {
+                return ['success' => false, 'message' => 'Stok tidak tersedia untuk produk: ' . $nama_produk];
+            }
 
-        $total_harga = 0;
-        $total_berat = 0;
-        $stok_digunakan = [];
-        $sisa = $jumlah;
+            $total_harga = 0;
+            $total_berat = 0;
+            $stok_digunakan = [];
+            $sisa = $jumlah;
 
-        foreach ($stokList as $stok) {
-            if ($sisa <= 0) break;
+            foreach ($stokList as $stok) {
+                if ($sisa <= 0) break;
 
-            $kurang = min($stok->jumlah_stok_produk, $sisa);
+                $kurang = min($stok->jumlah_stok_produk, $sisa);
 
-            $sisa_stok = $stok->jumlah_stok_produk - $kurang;
-            $total_berat_baru = $sisa_stok * $stok->berat_produk;
-            $total_harga_baru = $sisa_stok * $stok->harga_produk;
+                $sisa_stok = $stok->jumlah_stok_produk - $kurang;
+                $total_berat_baru = $sisa_stok * $stok->berat_produk;
+                $total_harga_baru = $sisa_stok * $stok->harga_produk;
 
-            DB::table('stok_produk')
-                ->where('id_stok', $stok->id_stok)
-                ->update([
-                    'jumlah_stok_produk' => $sisa_stok,
-                    'total_berat' => $total_berat_baru,
-                    'total_harga' => $total_harga_baru
-                ]);
+                DB::table('stok_produk')
+                    ->where('id_stok', $stok->id_stok)
+                    ->update([
+                        'jumlah_stok_produk' => $sisa_stok,
+                        'total_berat' => $total_berat_baru,
+                        'total_harga' => $total_harga_baru
+                    ]);
 
-            $total_harga += $kurang * $stok->harga_produk;
-            $total_berat += $kurang * $stok->berat_produk;
+                $total_harga += $kurang * $stok->harga_produk;
+                $total_berat += $kurang * $stok->berat_produk;
 
-            $stok_digunakan[] = [
-                'id_stok' => $stok->id_stok,
-                'jumlah_diambil' => $kurang,
-                'harga' => $stok->harga_produk,
-                'berat' => $stok->berat_produk
+                $stok_digunakan[] = [
+                    'id_stok' => $stok->id_stok,
+                    'jumlah_diambil' => $kurang,
+                    'harga' => $stok->harga_produk,
+                    'berat' => $stok->berat_produk
+                ];
+
+                $sisa -= $kurang;
+            }
+
+            if ($sisa > 0) {
+                return ['success' => false, 'message' => 'Stok tidak mencukupi untuk produk: ' . $nama_produk];
+            }
+
+            return [
+                'success' => true,
+                'total_harga' => $total_harga,
+                'total_berat' => $total_berat,
+                'stok_digunakan' => $stok_digunakan
             ];
-
-            $sisa -= $kurang;
-        }
-
-        if ($sisa > 0) {
-            return ['success' => false, 'message' => 'Stok tidak mencukupi untuk produk: ' . $nama_produk];
-        }
-
-        return [
-            'success' => true,
-            'total_harga' => $total_harga,
-            'total_berat' => $total_berat,
-            'stok_digunakan' => $stok_digunakan
-        ];
+        });
     }
 
     public function tambahStok($id_stok, $jumlah)

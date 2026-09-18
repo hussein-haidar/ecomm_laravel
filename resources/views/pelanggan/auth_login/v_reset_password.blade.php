@@ -57,7 +57,7 @@
                 <div class="alert alert-warning">{{ session('pesan_warning') }}</div>
             @endif
             
-            <form action="{{ route('auth.ganti_password', ['id_pelanggan' => $user->id_pelanggan]) }}" method="GET">
+            <form action="{{ route('auth.ganti_password', ['token' => $token]) }}" method="POST">
                 @csrf
                 <div class="form-group">
                     <label for="new_password">Password Baru</label>
