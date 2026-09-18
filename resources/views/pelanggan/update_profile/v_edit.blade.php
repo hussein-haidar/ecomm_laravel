@@ -101,34 +101,89 @@
             });
         }
 
-        function geocodeAndDetectKota(lat, lng, userInitiated) {
-            var alamatBox = document.getElementById('alamatLengkap_profil');
-            alamatBox.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi lokasi...';
+        function firstOf(items) {
+            for (var i = 0; i < items.length; i++) {
+                if (items[i] && String(items[i]).trim() !== '' && items[i] !== '-') {
+                    return String(items[i]).trim();
+                }
+            }
+            return '-';
+        }
 
+        function fetchWithTimeout(url, opts, ms) {
+            var controller = new AbortController();
+            var id = setTimeout(function() { controller.abort(); }, ms);
+            return fetch(url, Object.assign({ signal: controller.signal }, opts || {}))
+                .then(function(res) { clearTimeout(id); return res.json(); })
+                .catch(function(err) { clearTimeout(id); throw err; });
+        }
+
+        function resolveKabupatenKota(addr) {
+            var candidates = [addr.county, addr.city, addr.municipality, addr.town];
+            for (var i = 0; i < candidates.length; i++) {
+                var c = candidates[i];
+                if (c && /^(KABUPATEN|KOTA)\s+/i.test(c)) return c.replace(/^(Kabupaten|Kota)\s+/i, '');
+                if (c) return c;
+            }
+            return '-';
+        }
+
+        function resolveProvinsi(provinsi, kota, kecamatan) {
+            if (provinsi !== 'Jawa' || (kota === '-' && kecamatan === '-')) return provinsi;
+            var token = (kota !== '-' ? kota : kecamatan).toLowerCase();
+            var jawaMap = {
+                'jakarta': 'DKI Jakarta', 'pekalongan': 'Jawa Tengah', 'semarang': 'Jawa Tengah', 'salatiga': 'Jawa Tengah',
+                'solo': 'Jawa Tengah', 'surakarta': 'Jawa Tengah', 'jogja': 'Jawa Tengah', 'yogyakarta': 'Jawa Tengah',
+                'surabaya': 'Jawa Timur', 'malang': 'Jawa Timur', 'madiun': 'Jawa Timur', 'blitar': 'Jawa Timur',
+                'kediri': 'Jawa Timur', 'mojokerto': 'Jawa Timur', 'magetan': 'Jawa Timur', 'ngawi': 'Jawa Timur',
+                'tegal': 'Jawa Tengah', 'pemalang': 'Jawa Tengah', 'brebes': 'Jawa Tengah',
+                'batang': 'Jawa Tengah', 'kendal': 'Jawa Tengah', 'temanggung': 'Jawa Tengah', 'wonosobo': 'Jawa Tengah',
+                'purwokerto': 'Jawa Tengah', 'banyumas': 'Jawa Tengah', 'cilacap': 'Jawa Tengah', 'purbalingga': 'Jawa Tengah',
+                'banjarnegara': 'Jawa Tengah', 'klaten': 'Jawa Tengah', 'boyolali': 'Jawa Tengah', 'sukoharjo': 'Jawa Tengah',
+                'karanganyar': 'Jawa Tengah', 'sragen': 'Jawa Tengah', 'grobogan': 'Jawa Tengah', 'blora': 'Jawa Tengah',
+                'rembang': 'Jawa Tengah', 'pati': 'Jawa Tengah', 'kudus': 'Jawa Tengah', 'jepara': 'Jawa Tengah', 'demak': 'Jawa Tengah',
+                'bandung': 'Jawa Barat', 'bogor': 'Jawa Barat', 'depok': 'Jawa Barat', 'bekasi': 'Jawa Barat',
+                'cirebon': 'Jawa Barat', 'garut': 'Jawa Barat', 'tasikmalaya': 'Jawa Barat', 'sumedang': 'Jawa Barat',
+                'sukabumi': 'Jawa Barat', 'karawang': 'Jawa Barat', 'subang': 'Jawa Barat', 'indramayu': 'Jawa Barat',
+                'cianjur': 'Jawa Barat', 'kuningan': 'Jawa Barat', 'majalengka': 'Jawa Barat', 'purwakarta': 'Jawa Barat',
+                'banyuwangi': 'Jawa Timur', 'jember': 'Jawa Timur', 'situbondo': 'Jawa Timur', 'bondowoso': 'Jawa Timur',
+                'bangkalan': 'Jawa Timur', 'sampang': 'Jawa Timur', 'pamekasan': 'Jawa Timur', 'sumenep': 'Jawa Timur',
+                'gresik': 'Jawa Timur', 'sidoarjo': 'Jawa Timur', 'pasuruan': 'Jawa Timur', 'probolinggo': 'Jawa Timur',
+                'lumajang': 'Jawa Timur', 'tuban': 'Jawa Timur', 'lamongan': 'Jawa Timur', 'bojonegoro': 'Jawa Timur',
+                'ponorogo': 'Jawa Timur', 'tulungagung': 'Jawa Timur', 'jombang': 'Jawa Timur', 'nganjuk': 'Jawa Timur',
+                'trenggalek': 'Jawa Timur', 'pacitan': 'Jawa Timur',
+                'bantul': 'D.I. Yogyakarta', 'sleman': 'D.I. Yogyakarta', 'kulon progo': 'D.I. Yogyakarta', 'kulonprogo': 'D.I. Yogyakarta', 'gunung kidul': 'D.I. Yogyakarta',
+                'tangerang': 'Banten', 'serang': 'Banten', 'lebak': 'Banten', 'pandeglang': 'Banten'
+            };
+            for (var k in jawaMap) {
+                if (token.indexOf(k) !== -1) return jawaMap[k];
+            }
+            return provinsi;
+        }
+
+        function bigDataCloudGeocode(alamatBox, lat, lng) {
             var urlBdc = "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lng + "&localityLanguage=id";
-            
-            fetch(urlBdc)
-            .then(function(r) { return r.json(); })
+            fetchWithTimeout(urlBdc, {}, 10000)
             .then(function(data) {
                 if (data && (data.city || data.district || data.subdistrict || data.locality || data.principalSubdivision)) {
-                    var rawDesa = data.locality || data.neighbourhood || data.suburb || '-';
-                    var rawKecamatan = data.subdistrict || data.district || '-';
+                    var rawDesa = firstOf([data.locality, data.neighbourhood, data.suburb]);
+                    var rawKecamatan = firstOf([data.subdistrict, data.district]);
                     var rawKota = data.city || '-';
                     var rawProvinsi = data.principalSubdivision || '-';
-                    
+
                     var isCityActuallyKecamatan = (
-                        rawKota !== '-' && 
-                        rawDesa !== '-' && 
+                        rawKota !== '-' &&
+                        rawDesa !== '-' &&
                         rawKota.toLowerCase() === rawDesa.toLowerCase() &&
                         rawKecamatan === '-' &&
                         (rawProvinsi === 'Jawa' || rawProvinsi === 'Jawa Barat' || rawProvinsi === 'Jawa Tengah' || rawProvinsi === 'Jawa Timur')
                     );
-                    
+
                     var desa = '-';
                     var kecamatan = '-';
                     var kota = '-';
                     var provinsi = rawProvinsi;
-                    
+
                     if (isCityActuallyKecamatan) {
                         kecamatan = rawKota;
                         kota = '-';
@@ -137,66 +192,57 @@
                         kecamatan = rawKecamatan;
                         kota = rawKota;
                     }
-                    
+
                     if (kota !== '-' && desa !== '-' && kota.toLowerCase() === desa.toLowerCase()) {
                         desa = '-';
                     }
-                    
-                    if (provinsi === 'Jawa' && kota !== '-') {
-                        var jawaMap = {
-                            'pekalongan': 'Jawa Tengah', 'semarang': 'Jawa Tengah', 'solo': 'Jawa Tengah', 'jogja': 'Jawa Tengah', 'yogyakarta': 'Jawa Tengah',
-                            'surabaya': 'Jawa Timur', 'malang': 'Jawa Timur', 'kediri': 'Jawa Timur', 'mojokerto': 'Jawa Timur',
-                            'bandung': 'Jawa Barat', 'bogor': 'Jawa Barat', 'depok': 'Jawa Barat', 'bekasi': 'Jawa Barat', 'cirebon': 'Jawa Barat'
-                        };
-                        var kotaLower = kota.toLowerCase();
-                        for (var k in jawaMap) {
-                            if (kotaLower.includes(k)) { provinsi = jawaMap[k]; break; }
-                        }
-                    }
-                    
-                    if (desa !== '-') desa = desa.replace(/^(Desa|Kelurahan)\s+/i, '');
-                    if (kecamatan !== '-') kecamatan = kecamatan.replace(/^Kecamatan\s+/i, '');
-                    if (kota !== '-') kota = kota.replace(/^(Kabupaten|Kota)\s+/i, '');
-                    if (provinsi !== '-') provinsi = provinsi.replace(/^Provinsi\s+/i, '');
 
+                    provinsi = resolveProvinsi(provinsi, kota, kecamatan);
                     showAlamatProfil(alamatBox, desa, kecamatan, kota, provinsi);
                     return;
                 }
                 throw new Error('BigDataCloud empty');
             })
-            .catch(function() {
-                var controller = new AbortController();
-                var timeoutId = setTimeout(function() { controller.abort(); }, 10000);
+            .catch(function(err) {
+                if (err && err.name === 'AbortError') {
+                    alamatBox.innerHTML = '<i class="fas fa-clock text-warning"></i> Timeout. Geser marker.';
+                    return;
+                }
+                alamatBox.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Gagal mengambil alamat.';
+            });
+        }
 
-                fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat + "&lon=" + lng +
-                    "&zoom=18&addressdetails=1&accept-language=id&countrycodes=id",
-                    { headers: { 'User-Agent': 'TokoOnlineApp/1.0' }, signal: controller.signal })
-                .then(function(r) { clearTimeout(timeoutId); return r.json(); })
-                .then(function(data) {
-                    if (data.address) {
-                        var addr = data.address;
-                        var desa = addr.village || addr.hamlet || addr.neighbourhood || addr.suburb || addr.quarter || addr.residential || addr.locality || addr.island || '-';
-                        var kecamatan = addr.subdistrict || addr.district || addr.city_district || addr.borough || '-';
-                        var kota = '-';
-                        if (addr.county && /kabupaten|kota/i.test(addr.county)) kota = addr.county.replace(/^(Kabupaten|Kota)\s+/i, '');
-                        else if (addr.city) kota = addr.city;
-                        else if (addr.municipality) kota = addr.municipality;
-                        else if (addr.town && !/kabupaten|kota/i.test(addr.town)) kota = addr.town;
-                        var provinsi = addr.state || addr.province || '-';
-                        
-                        if (kecamatan !== '-') kecamatan = kecamatan.replace(/^Kecamatan\s+/i, '');
-                        if (desa !== '-') desa = desa.replace(/^(Desa|Kelurahan)\s+/i, '');
-                        
-                        showAlamatProfil(alamatBox, desa, kecamatan, kota, provinsi);
-                    } else {
-                        alamatBox.innerHTML = 'Alamat tidak ditemukan.';
+        function geocodeAndDetectKota(lat, lng, userInitiated) {
+            var alamatBox = document.getElementById('alamatLengkap_profil');
+            alamatBox.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendeteksi lokasi...';
+
+            var nomUrl = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + lat + "&lon=" + lng +
+                "&zoom=18&addressdetails=1&accept-language=id&countrycodes=id";
+
+            fetchWithTimeout(nomUrl, { headers: { 'User-Agent': 'TokoOnlineApp/1.0' } }, 10000)
+            .then(function(data) {
+                if (data && data.address) {
+                    var addr = data.address;
+                    var desa = firstOf([addr.village, addr.hamlet, addr.neighbourhood, addr.suburb, addr.quarter, addr.residential, addr.locality, addr.island]);
+                    var kecamatan = firstOf([addr.subdistrict, addr.district, addr.city_district]);
+                    var kota = resolveKabupatenKota(addr);
+                    var provinsi = addr.state || addr.province || '-';
+
+                    if (kota !== '-' && desa !== '-' && kota.toLowerCase() === desa.toLowerCase()) {
+                        desa = '-';
                     }
-                })
-                .catch(function(err) {
-                    clearTimeout(timeoutId);
-                    if (err.name === 'AbortError') alamatBox.innerHTML = '<i class="fas fa-clock text-warning"></i> Timeout. Geser marker.';
-                    else alamatBox.innerHTML = '<i class="fas fa-times-circle text-danger"></i> Gagal mengambil alamat.';
-                });
+
+                    showAlamatProfil(alamatBox, desa, kecamatan, kota, provinsi);
+                    return;
+                }
+                throw new Error('Nominatim empty');
+            })
+            .catch(function(err) {
+                if (err && err.name === 'AbortError') {
+                    alamatBox.innerHTML = '<i class="fas fa-clock text-warning"></i> Timeout. Geser marker.';
+                    return;
+                }
+                bigDataCloudGeocode(alamatBox, lat, lng);
             });
         }
 

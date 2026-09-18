@@ -59,7 +59,7 @@
 
                 <div class="modal-footer">
                     <button type="submit" class="btn btn-success">Simpan</button>
-                 <a href="{{ route('home_pemilik.profil') }}" class="btn btn-primary">Kembali</a>  
+                 <a href="{{ route('pemilik_data.profil') }}" class="btn btn-primary">Kembali</a>  
                 </div>
 
 </form>  

@@ -32,10 +32,10 @@
                                                 <span class="badge bg-danger position-absolute m-3 px-3 rounded-pill" style="z-index: 10; font-size: 0.7rem;">
                                                     <i class="fas fa-bolt me-1"></i>FLASH SALE
                                                 </span>
+<div class="img-container position-relative bg-light" style="overflow: hidden;">
 
-                                                <div class="img-container position-relative bg-light" style="aspect-ratio: 1/1; overflow: hidden;">
                                                     <a href="{{ url('home_toko/detail_produk/' . urlencode($item->nama_produk)) }}" aria-label="Lihat detail {{ $item->nama_produk }}">
-                                                        <img src="{{ asset('fotoproduk/' . ($item->foto_produk ?? 'default.jpg')) }}" class="card-img-top img-fluid w-100 h-100" alt="{{ $item->nama_produk }}" style="object-fit: cover; transition: transform 0.4s ease;" loading="lazy">
+                                                        <img src="{{ asset('fotoproduk/' . ($item->foto_produk ?? 'default.jpg')) }}" class="card-img-top img-fluid w-100" alt="{{ $item->nama_produk }}" style="transition: transform 0.4s ease;" loading="lazy">
                                                     </a>
                                                     <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-gradient" style="background: linear-gradient(transparent, rgba(0,0,0,0.8)); opacity: 0; transition: opacity 0.3s ease;">
                                                         <div class="d-flex justify-content-center">

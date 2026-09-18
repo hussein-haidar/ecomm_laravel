@@ -31,7 +31,7 @@
     <!-- Google Fonts: Cairo (support Indonesia) -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Favicon -->
-    <link rel="icon" href="{{ asset('assets/images/logo.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ !empty($dataWebsite['logo_website']) ? asset('logo_website/' . $dataWebsite['logo_website']) : asset('assets/images/logo.png') }}" type="image/png">
 
     {{-- Custom CSS untuk integrasi Laravel --}}
     <style>
@@ -44,10 +44,16 @@
             direction: ltr !important;
         }
 
+        /* Warna aksen navbar: biru - hijau (sesuai tema HAPPYSHOP) */
+        :root {
+            --nav-grad: linear-gradient(135deg, #0ea5e9, #10b981);
+            --nav-grad-hover: linear-gradient(135deg, #0b8ec8, #0da271);
+        }
+
         /* Navbar scrolled state */
         .navbar-modern.scrolled {
-            background: rgba(255, 255, 255, 0.98) !important;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            background: #ffffff !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
         }
 
         .navbar-modern.scrolled .nav-link {
@@ -65,16 +71,144 @@
         }
 
         .navbar-modern.scrolled .search-box i {
-            color: #667eea;
+            color: #0ea5e9;
         }
 
         .navbar-modern.scrolled .cart-btn {
-            background: linear-gradient(45deg, #667eea, #764ba2) !important;
+            background: var(--nav-grad) !important;
             border-color: transparent;
         }
 
         .navbar-modern.scrolled .navbar-toggler-icon {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28102, 126, 234, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* Professional white navbar (always readable on any page) */
+        .navbar-modern,
+        .navbar-modern.navbar {
+            background: rgba(255, 255, 255, 0.98) !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.05);
+            padding: 0.45rem 0 !important;
+        }
+
+        .navbar-modern .brand-text {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        .navbar-modern .nav-link {
+            color: #444 !important;
+            font-weight: 600;
+            margin: 0 2px;
+            padding: 8px 14px !important;
+            white-space: nowrap;
+        }
+
+        .navbar-modern .nav-link:hover,
+        .navbar-modern .nav-link.active {
+            background: var(--nav-grad);
+            color: #fff !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(14, 165, 233, 0.35);
+        }
+
+        .navbar-modern .nav-link.no-caret::after {
+            display: none;
+        }
+
+        .navbar-modern .search-box input {
+            background: #f1f3f9 !important;
+            border-color: transparent !important;
+            color: #333;
+            width: 100%;
+        }
+
+        .navbar-modern .search-box input::placeholder {
+            color: #8a8f9f;
+        }
+
+        .navbar-modern .search-box i {
+            color: #0ea5e9;
+        }
+
+        .navbar-modern .search-box {
+            width: 200px;
+        }
+
+        @media (max-width: 767.98px) {
+            .navbar-modern .search-box {
+                width: 100%;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .navbar-modern .search-box {
+                width: 240px;
+            }
+        }
+
+        .navbar-modern .cart-btn {
+            background: var(--nav-grad) !important;
+            border: none;
+            color: #fff !important;
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+        }
+
+        .navbar-modern .cart-btn:hover {
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.4);
+        }
+
+        .navbar-modern .notif-btn {
+            background: #f1f3f9;
+            color: #334155;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-modern .notif-btn:hover {
+            background: var(--nav-grad);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35);
+        }
+
+        .navbar-modern .auth-btn {
+            border-radius: 50rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .navbar-modern .auth-btn-solid {
+            background: var(--nav-grad);
+            border: none;
+            color: #fff;
+        }
+
+        .navbar-modern .auth-btn-solid:hover {
+            background: var(--nav-grad-hover);
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(14, 165, 233, 0.35);
+        }
+
+        .navbar-modern .navbar-toggler {
+            border-color: rgba(0, 0, 0, 0.15) !important;
+        }
+
+        .navbar-modern .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2868, 80, 90, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        .avatar-placeholder {
+            flex-shrink: 0;
         }
 
         /* Product card integration */
@@ -88,17 +222,32 @@
             box-shadow: 0 10px 30px rgba(102, 126, 234, 0.2);
         }
 
+        .product-card .img-container,
         .img-container {
             position: relative;
             overflow: hidden;
+            height: auto !important;
+            border-radius: 20px 20px 0 0;
+            background: #f8f9fa;
         }
 
+        .product-card .img-container img,
         .img-container img {
-            transition: transform 0.3s ease;
+            width: 100% !important;
+            height: auto !important;
+            max-height: 400px;
+            max-width: none !important;
+            object-fit: contain !important;
+            display: block;
+            transition: transform 0.4s ease;
         }
 
         .product-card:hover .img-container img {
-            transform: scale(1.05);
+            transform: scale(1.08);
+        }
+
+        .product-card .card-body {
+            padding: 1.1rem 1.25rem !important;
         }
 
         /* Badge positioning */
@@ -234,6 +383,12 @@
             }
         }
 
+        /* Compact professional hero */
+        .hero-section {
+            min-height: auto !important;
+            padding: 130px 0 70px;
+        }
+
         /* Search input focus */
         .search-box input:focus {
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
@@ -329,6 +484,153 @@
         .social-btn:hover {
             transform: translateY(-3px) scale(1.1);
         }
+
+        /* ===== Professional Footer ===== */
+        .footer-modern {
+            background: #1b1e2b;
+            color: rgba(255, 255, 255, 0.85);
+            border-top: 3px solid transparent;
+            border-image: linear-gradient(90deg, #667eea, #764ba2) 1;
+        }
+
+        .footer-modern .footer-widget .footer-title {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-modern .footer-widget .footer-title::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 3px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .footer-modern .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-modern .footer-links a,
+        .footer-modern .footer-contact a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer-modern .footer-links a:hover {
+            color: #a5b4fc;
+            padding-left: 6px;
+        }
+
+        .footer-modern .footer-contact .text-muted {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        .footer-modern .social-btn {
+            width: 42px;
+            height: 42px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .footer-modern .social-btn:hover {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .footer-modern .payment-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #334155 !important;
+            border-radius: 8px;
+            padding: 3px 9px;
+            font-size: 0.72rem;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .footer-modern .payment-badge i {
+            font-size: 0.9rem;
+        }
+
+        .footer-modern .footer-bottom {
+            border-top-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .footer-modern .footer-bottom .text-muted {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        /* Fix global img rule from template (keeps small logos/avatars their size) */
+        img {
+            max-width: 100%;
+        }
+
+        img[width],
+        img[height] {
+            height: auto !important;
+        }
+
+        img[width][height] {
+            width: auto !important;
+        }
+
+        .navbar-modern .brand-logo img {
+            width: 36px !important;
+            height: 36px !important;
+        }
+
+        .navbar-modern img.navbar-avatar {
+            width: 28px !important;
+            height: 28px !important;
+            object-fit: cover;
+            border: 2px solid rgba(14, 165, 233, 0.5);
+            background: var(--nav-grad);
+        }
+
+        .navbar-modern .avatar-placeholder {
+            width: 28px !important;
+            height: 28px !important;
+            background: var(--nav-grad);
+            font-size: 0.8rem;
+        }
+
+        .navbar-modern .brand-text {
+            color: #0f172a !important;
+            background: none !important;
+            -webkit-background-clip: unset !important;
+            background-clip: unset !important;
+            -webkit-text-fill-color: #0f172a !important;
+        }
+
+        .footer-modern .footer-brand img {
+            width: 48px !important;
+            height: 48px !important;
+        }
+
+        .navbar-brand img,
+        .footer-brand img,
+        .social-btn img,
+        .brand-logo img {
+            object-fit: cover;
+        }
+
+        /* Kompensasi navbar fixed agar konten tidak tertutup */
+        body {
+            padding-top: 64px;
+        }
+
+        .hero-section {
+            margin-top: -64px;
+        }
     </style>
 </head>
 
@@ -418,6 +720,16 @@
                 });
             }
         });
+
+        // Navbar scroll state
+        function updateNavbar() {
+            const nav = document.querySelector('.navbar-modern');
+            if (nav) {
+                nav.classList.toggle('scrolled', window.scrollY > 40);
+            }
+        }
+        window.addEventListener('scroll', updateNavbar, { passive: true });
+        window.addEventListener('DOMContentLoaded', updateNavbar);
     </script>
     {{-- Page-specific scripts --}}
     @stack('scripts')

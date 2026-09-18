@@ -298,7 +298,7 @@ class M_Home_toko extends Model
 
             $result['ukuran_list'] = $ukuran_list;
         } else {
-            $result = ['ukuran_list' => [], 'total_stok' => 0];
+            $result = null;
         }
 
         return $result;

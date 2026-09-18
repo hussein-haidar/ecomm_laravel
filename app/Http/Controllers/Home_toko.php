@@ -70,6 +70,7 @@ class Home_toko extends WebsiteController
     public function view_toko($nama_toko, Request $request)
     {
         $session = session();
+        $nama_toko = urldecode($nama_toko);
         $keyword = $request->input('keyword');
         $hargaMin = $request->input('harga_min');
         $hargaMax = $request->input('harga_max');
@@ -145,6 +146,8 @@ class Home_toko extends WebsiteController
         $sortHarga = $request->input('sort_harga');
         $sortNama = $request->input('sort_nama');
         $sortBy = $sortHarga ?: $sortNama;
+        $ratingFilter = $request->input('rating', []); // array of star values like ['4','5']
+        $minRating = $ratingFilter ? min(array_map('intval', $ratingFilter)) : null;
 
         // Ambil dropdown dulu
         $jenis_produk_dropdown = $this->M_Home_toko->getJenisProdukDropdown();
@@ -180,6 +183,14 @@ class Home_toko extends WebsiteController
 
         $this->lampirkanRatingUlasan($produkData);
 
+        // Filter by rating (min rating) after rating is attached
+        if ($minRating !== null) {
+            $produkData = array_filter($produkData, function($produk) use ($minRating) {
+                return ($produk['rata_rating'] ?? 0) >= $minRating;
+            });
+            $produkData = array_values($produkData); // re-index
+        }
+
         $id_pelanggan = $session->get('id_pelanggan');
 
         if (!$id_pelanggan) {
@@ -202,7 +213,7 @@ class Home_toko extends WebsiteController
             'produk_data' => $produkData,
             'data_carousel' => $this->M_Home_toko->getPromo(),
             'jenis_produk_dropdown' => $jenis_produk_dropdown,
-            'filter_params' => compact('keyword', 'hargaMin', 'hargaMax', 'sortHarga', 'sortNama', 'jenisProduk'),
+            'filter_params' => compact('keyword', 'hargaMin', 'hargaMax', 'sortHarga', 'sortNama', 'jenisProduk', 'ratingFilter'),
             'user_logged_in' => $session->get('user_logged_in') === true,
         ];
 
@@ -288,6 +299,7 @@ class Home_toko extends WebsiteController
     {
         $session = session();
         $keyword = $request->input('keyword', '');
+        $namaProduk = urldecode($namaProduk);
 
         // Ambil data produk berdasarkan jenis dan keyword
         $produkData = $this->M_Home_toko->getProduk($keyword);

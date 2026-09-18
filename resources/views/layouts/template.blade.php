@@ -20,7 +20,7 @@
 <link rel="stylesheet"
     href="{{ asset('template_admin/bower_components/datatables.net-bs/css/dataTables.bootstrap.min.css') }}">
 <!-- Icon -->
-<link rel="shortcut icon" href="{{ asset('icon/SugarCRM-Outright.ico') }}">
+<link rel="shortcut icon" href="{{ !empty($dataWebsite['logo_website'] ?? null) ? asset('logo_website/' . $dataWebsite['logo_website']) : asset('icon/SugarCRM-Outright.ico') }}">
 
 <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
 <!-- WARNING: Respond.js d oesn't work if you view the page via file:// -->

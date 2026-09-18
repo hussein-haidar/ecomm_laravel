@@ -10,7 +10,7 @@
     $hasMultipleSizes = is_array($ukuranList) && count($ukuranList) > 1;
 @endphp
 
-<div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ ($loop->index % 8) * 50 }}">
+<div class="col-6 col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ ($loop->index % 8) * 50 }}">
     <article class="product-card card h-100 shadow-sm border-0 overflow-hidden" 
              style="transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
              data-id-stok="{{ $produk['id_stok'] }}"
@@ -39,12 +39,12 @@
         @endif
         
         {{-- Product Image --}}
-        <div class="img-container position-relative bg-light" style="aspect-ratio: 1/1; overflow: hidden;">
+        <div class="img-container position-relative bg-light" style="overflow: hidden;">
             <a href="{{ url('home_toko/detail_produk/' . urlencode($produk['nama_produk'])) }}" aria-label="Lihat detail {{ $produk['nama_produk'] }}">
                 <img src="{{ asset('fotoproduk/' . ($produk['foto_produk'] ?? 'default.jpg')) }}" 
-                     class="card-img-top img-fluid w-100 h-100" 
+                     class="card-img-top img-fluid w-100" 
                      alt="{{ $produk['nama_produk'] }}"
-                     style="object-fit: cover; transition: transform 0.4s ease;"
+                     style="transition: transform 0.4s ease;"
                      loading="lazy">
             </a>
             
@@ -121,19 +121,6 @@
                     <span class="text-muted">({{ number_format($rating, 1) }} - {{ $produk['jumlah_ulasan'] ?? 0 }} Ulasan)</span>
                 </div>
             </div>
-            
-            {{-- Size Info --}}
-            @if($hasMultipleSizes)
-                <div class="mb-2">
-                    <small class="text-muted d-flex align-items-center gap-1 flex-wrap">
-                        <i class="fas fa-ruler-combined text-primary"></i>
-                        Ukuran:
-                        @foreach($ukuranList as $uk)
-                            <span class="badge bg-light text-dark border">{{ $uk }}</span>
-                        @endforeach
-                    </small>
-                </div>
-            @endif
             
             {{-- Stock Status --}}
             <div class="mb-2">

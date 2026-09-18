@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\View; // Tambahkan ini
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Str; // untuk truncate tagline
 
 class WebsiteController extends Controller
 {
@@ -13,14 +14,32 @@ class WebsiteController extends Controller
     {
         // Ambil data website yang aktif
         $website = DB::table('website')
-        ->where('status_website', 'Aktif')
+            ->where('status_website', 'Aktif')
             ->where('sesi_user', 'Superadmin')
-        ->first();
+            ->first();
+
+        $deskripsi = $website?->footer_title
+            ?? 'Toko online terpercaya dengan berbagai produk berkualitas.';
 
         $this->dataWebsite = [
-            'nama_toko' => $website ? $website->nama_toko : 'Nama Toko Default',
-            'logo_website' => $website ? $website->logo_website : null,
-            'wa_pusat' => $website ? $website->wa_pusat : '',
+            'nama_toko' => $website?->nama_toko ?? 'HAPPYSHOP',
+            'logo_website' => $website?->logo_website ?? null,
+            'wa_pusat' => $website?->wa_pusat ?? '',
+            'wa_cabang' => $website?->wa_cabang ?? '',
+            'alamat_pusat' => $website?->alamat_pusat ?? 'Indonesia',
+            'alamat_cabang' => $website?->alamat_cabang ?? '',
+            'latitude_pusat' => $website?->latitude_pusat ?? -6.9175,
+            'longitude_pusat' => $website?->longitude_pusat ?? 107.6191,
+            'kode_kota' => $website?->kode_kota ?? '',
+            'nama_kota' => $website?->nama_kota ?? '',
+            'bgd_web' => $website?->bgd_web ?? null,
+            'footer_title' => $deskripsi,
+            'deskripsi_toko' => $deskripsi,
+            'tagline' => Str::limit($deskripsi, 85, '…'),
+            'email_toko' => ($website?->nama_toko ? strtolower(str_replace(' ', '', $website->nama_toko)) : 'info') . '@gmail.com',
+            'link_IG' => $website?->link_IG ?? '#',
+            'link_FB' => $website?->link_FB ?? '#',
+            'link_Tiktok' => $website?->link_Tiktok ?? '#',
         ];
 
         // Share ke semua view

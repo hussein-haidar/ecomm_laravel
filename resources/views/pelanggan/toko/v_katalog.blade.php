@@ -14,41 +14,14 @@
         }
 
         // Filter form auto-submit on change (for select inputs)
-        document.querySelectorAll('#filterForm select').forEach(select => {
-            select.addEventListener('change', function() {
-                this.form.submit();
+        const filterForm = document.getElementById('filterForm');
+        if (filterForm) {
+            filterForm.querySelectorAll('select, input[type="checkbox"]').forEach(el => {
+                el.addEventListener('change', function() {
+                    this.form.submit();
+                });
             });
-        });
-
-        // Mobile filter sheet toggle
-        window.openFilterSheet = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            const sheet = document.getElementById('filterSheet');
-            const overlay = document.getElementById('filterSheetOverlay');
-            if (sheet && overlay) {
-                sheet.classList.add('active');
-                overlay.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-        };
-
-        window.closeFilterSheet = function() {
-            const sheet = document.getElementById('filterSheet');
-            const overlay = document.getElementById('filterSheetOverlay');
-            if (sheet && overlay) {
-                sheet.classList.remove('active');
-                overlay.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        };
-
-        // Close filter on escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                window.closeFilterSheet();
-            }
-        });
+        }
 
         // Price range validation
         const hargaMin = document.querySelector('input[name="harga_min"]');
@@ -65,6 +38,30 @@
                 }
             });
         }
+
+        // Rating filter: ensure only one checkbox selected per row? Actually allow multiple (min rating)
+        const ratingInputs = document.querySelectorAll('input[name="rating[]"]');
+        ratingInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                // If a higher star is checked, check all lower ones too (min rating logic)
+                if (this.checked) {
+                    const val = parseInt(this.value);
+                    ratingInputs.forEach(other => {
+                        if (parseInt(other.value) <= val) {
+                            other.checked = true;
+                        }
+                    });
+                } else {
+                    // If unchecking, uncheck all higher stars
+                    const val = parseInt(this.value);
+                    ratingInputs.forEach(other => {
+                        if (parseInt(other.value) > val) {
+                            other.checked = false;
+                        }
+                    });
+                }
+            });
+        });
     });
 </script>
 @endpush
@@ -156,6 +153,21 @@
                             </div>
 
                             <div class="mb-4">
+                                <label class="form-label fw-medium">Rating / Ulasan</label>
+                                <div class="d-flex flex-column gap-1">
+                                    @for($i = 5; $i >= 1; $i--)
+                                        <div class="form-check form-check-sm">
+                                            <input class="form-check-input" type="checkbox" name="rating[]" value="{{ $i }}" id="rating_{{ $i }}" {{ in_array((string)$i, request('rating', [])) ? 'checked' : '' }}>
+                                            <label class="form-check-label small text-warning" for="rating_{{ $i }}">
+                                                @for($j = 1; $j <= $i; $j++) <i class="fas fa-star"></i> @endfor
+                                                {{ $i }}+ bintang
+                                            </label>
+                                        </div>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
                                 <label class="form-label fw-medium">Urutkan</label>
                                 <select name="sort_harga" class="form-select form-select-sm mb-2">
                                     <option value="" {{ request('sort_harga') == '' && request('sort_nama') == '' ? 'selected' : '' }}>Default</option>
@@ -197,6 +209,10 @@
                                 if(request('keyword')) $filters[] = 'kata kunci: "'.request('keyword').'"';
                                 if(request('jenis_produk')) $filters[] = 'kategori: "'.request('jenis_produk').'"';
                                 if(request('harga_min') || request('harga_max')) $filters[] = 'harga: '.(request('harga_min') ? 'Rp'.number_format(request('harga_min'),0,',','.') : '').' - '.(request('harga_max') ? 'Rp'.number_format(request('harga_max'),0,',','.') : '');
+                                if(request('rating') && count(request('rating'))) {
+                                    $minRating = min(array_map('intval', request('rating')));
+                                    $filters[] = 'rating minimal: '.$minRating.'+ bintang';
+                                }
                             @endphp
                             Menampilkan <strong>{{ $totalProduk }}</strong> produk
                             @if(!empty($filters))
@@ -206,10 +222,10 @@
                     </div>
                     <div class="d-flex gap-2">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-start-pill {{ !request('view') || request('view') == 'grid' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->query()->all(), ['view' => 'grid'])) }}'" aria-label="Grid View">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-start-pill {{ !request('view') || request('view') == 'grid' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->all(), ['view' => 'grid'])) }}'" aria-label="Grid View">
                                 <i class="fas fa-th-large"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-end-pill {{ request('view') == 'list' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->query()->all(), ['view' => 'list'])) }}'" aria-label="List View">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-end-pill {{ request('view') == 'list' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->all(), ['view' => 'list'])) }}'" aria-label="List View">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
@@ -286,6 +302,20 @@
                 </div>
             </div>
             <div class="mb-3">
+                <label class="form-label fw-medium">Rating / Ulasan</label>
+                <div class="d-flex flex-column gap-1">
+                    @for($i = 5; $i >= 1; $i--)
+                        <div class="form-check form-check-sm">
+                            <input class="form-check-input" type="checkbox" name="rating[]" value="{{ $i }}" id="rating_mobile_{{ $i }}" {{ in_array((string)$i, request('rating', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label small text-warning" for="rating_mobile_{{ $i }}">
+                                @for($j = 1; $j <= $i; $j++) <i class="fas fa-star"></i> @endfor
+                                {{ $i }}+ bintang
+                            </label>
+                        </div>
+                    @endfor
+                </div>
+            </div>
+            <div class="mb-3">
                 <label class="form-label fw-medium">Urutkan Harga</label>
                 <select name="sort_harga" class="form-select">
                     <option value="" {{ request('sort_harga') == '' ? 'selected' : '' }}>Default</option>
@@ -310,4 +340,38 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    // Mobile filter sheet toggle
+    window.openFilterSheet = function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const sheet = document.getElementById('filterSheet');
+        const overlay = document.getElementById('filterSheetOverlay');
+        if (sheet && overlay) {
+            sheet.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeFilterSheet = function() {
+        const sheet = document.getElementById('filterSheet');
+        const overlay = document.getElementById('filterSheetOverlay');
+        if (sheet && overlay) {
+            sheet.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    };
+
+    // Close filter on escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeFilterSheet();
+        }
+    });
+</script>
+@endpush
 @endsection

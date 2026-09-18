@@ -17,7 +17,7 @@
             $stokText = $stok <= 0 ? 'Habis' : ($stok <= 5 ? "Sisa $stok" : 'Tersedia');
         @endphp
         
-        <div class="col-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ ($loop->index % 8) * 50 }}">
+        <div class="col-6 col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ ($loop->index % 8) * 50 }}">
             <article class="product-card card h-100 shadow-sm border-0 overflow-hidden" 
                      style="transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);"
                      data-id-stok="{{ $produk['id_stok'] }}"

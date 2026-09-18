@@ -82,7 +82,7 @@
             btn.addEventListener('click', function() {
                 const platform = this.dataset.share;
                 const url = encodeURIComponent(window.location.href);
-                const text = encodeURIComponent('{{ $produk['nama_produk'] }}');
+                const text = encodeURIComponent('{{ $produk['nama_produk'] ?? '' }}');
                 
                 let shareUrl = '';
                 switch(platform) {
@@ -149,6 +149,10 @@
 @endpush
 
 @section('content')
+@php
+    $ukuranList = $produk['ukuran_list'] ?? [];
+    $hasMultipleSizes = is_array($ukuranList) && count($ukuranList) > 1;
+@endphp
 @if(empty($produk))
     <div class="container py-5">
         <div class="alert alert-warning text-center">

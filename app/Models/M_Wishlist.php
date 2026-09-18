@@ -23,6 +23,7 @@ class M_Wishlist extends Model
         return DB::table('wishlist')
             ->join('stok_produk', 'stok_produk.id_stok', '=', 'wishlist.id_stok')
             ->leftJoin('produk', 'produk.nama_produk', '=', 'stok_produk.nama_produk')
+            ->leftJoin('website', 'website.sesi_user', '=', 'stok_produk.sesi_user')
             ->where('wishlist.id_pelanggan', $idPelanggan)
             ->orderByDesc('wishlist.tanggal_tambah')
             ->select(
@@ -35,7 +36,7 @@ class M_Wishlist extends Model
                 'stok_produk.jumlah_stok_produk',
                 'stok_produk.satuan_produk',
                 'stok_produk.sesi_user',
-                'stok_produk.nama_toko',
+                'website.nama_toko',
                 'produk.foto_produk'
             )
             ->get();
