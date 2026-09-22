@@ -1288,7 +1288,17 @@ function toggleNavbar() {
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById('logout-form').submit();
+                    // Cari form logout terdekat (desktop atau mobile)
+                    const btn = event.target.closest('button');
+                    const form = btn ? btn.closest('form') : null;
+                    if (form) {
+                        form.submit();
+                    } else {
+                        // Fallback: cari form dengan ID yang dikenal
+                        const formDesktop = document.getElementById('logout-form-desktop');
+                        const formMobile = document.getElementById('logout-form-mobile');
+                        (formDesktop || formMobile)?.submit();
+                    }
                 }
             });
         }

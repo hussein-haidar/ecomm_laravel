@@ -60,9 +60,6 @@
         <div class="row align-items-center py-5" style="min-height: 70vh;">
             <div class="col-lg-6" data-aos="fade-right" data-aos-duration="800">
                 <div class="hero-content text-white">
-                    <span class="badge bg-danger mb-3 px-3 py-2" style="font-size: 0.85rem;">
-                        <i class="fas fa-fire me-1"></i> {{ $dataWebsite['nama_toko'] }} - Promo Spesial Hari Ini!
-                    </span>
                     <h1 id="hero-title" class="display-4 fw-bold mb-4" style="line-height: 1.2;">
                         {{ $dataWebsite['nama_toko'] }}
                         @if($dataWebsite['tagline'])
