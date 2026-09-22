@@ -10,6 +10,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('update:status-pengiriman')->everyMinute();
+        $schedule->command('orders:cancel-expired')->everyFiveMinutes()->withoutOverlapping();
     }
 
     protected function commands()

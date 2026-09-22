@@ -319,7 +319,7 @@
                                 <i class="fas fa-arrow-left me-1"></i>Lanjut Belanja
                             </a>
                             <button type="button" class="btn btn-primary rounded-pill py-2 fw-semibold" onclick="checkoutSelected()">
-                                <i class="fas fa-cart-arrow-down me-2"></i>Checkout ({{\{ selectedCount || 0 \}\}})
+                                <i class="fas fa-cart-arrow-down me-2"></i>Checkout (0)
                             </button>
                         </div>
                         <p class="text-muted small text-center mt-3 mb-0">Total final termasuk ongkir akan ditampilkan di halaman checkout.</p>

@@ -26,6 +26,7 @@ class M_User extends Model
         'username',
         'password',
         'fullname',
+        'email_user',
         'nama_title',
         'level',
         'foto_user',

@@ -45,6 +45,7 @@
             document.getElementById('latitude_pelanggan').value = pos.lat;
             document.getElementById('longitude_pelanggan').value = pos.lng;
             updateInfoJarak(pos.lat, pos.lng);
+            refreshOngkirByJarak();
             debounceGeocodeCheckout(pos.lat, pos.lng);
         }
 
@@ -59,6 +60,7 @@
 
         if (lat !== -6.9175 && lng !== 107.6191) {
             updateInfoJarak(lat, lng);
+            refreshOngkirByJarak();
             debounceGeocodeCheckout(lat, lng);
         }
     });
@@ -174,6 +176,7 @@
     const totalBelanja = {{ json_encode($totalSemua ?? 0) }};
     const latToko = {{ json_encode($latitude_pusat ?? -6.9175) }};
     const lngToko = {{ json_encode($longitude_pusat ?? 107.6191) }};
+    const sesiUserToko = "{{ $sesi_user_toko ?? '' }}";
 
     function haversine(lat1, lon1, lat2, lon2) {
         const R = 6371;
@@ -218,6 +221,18 @@
         }
     });
 
+    function refreshOngkirByJarak() {
+        const jarakKm = parseFloat(document.getElementById('jarak_km').value) || 0;
+        if (jarakKm <= 0) return;
+        const pakaiLokal = jarakKm >= 1 && jarakKm <= 25;
+        const destId = document.getElementById('destination_id').value || '';
+        if (pakaiLokal || destId) {
+            hitungSemuaOngkir(destId);
+        }
+    }
+
+    let ongkirRequestSeq = 0;
+
     function hitungSemuaOngkir(destId) {
         const loading = document.getElementById("loading_ongkir");
         const hasil = document.getElementById("hasil_ongkir");
@@ -227,58 +242,85 @@
         document.getElementById("daftar_ongkir_nasional").innerHTML = '';
         document.getElementById("section_ongkir_lokal").style.display = 'none';
         document.getElementById("section_ongkir_nasional").style.display = 'none';
+        document.getElementById("jenis_kurir").value = '';
+        document.getElementById("ongkir").value = '';
+        document.getElementById("estimasi_waktu").value = '';
+        document.getElementById("ongkir_display").value = '';
+        document.getElementById("estimasi_display").value = '';
+
+        const requestSeq = ++ongkirRequestSeq;
 
         const jarakKm = parseFloat(document.getElementById('jarak_km').value) || 0;
-        const promises = [];
 
-        if (jarakKm > 0 && jarakKm <= 50) {
+        // Filter kurir berdasar jarak pembeli ke toko:
+        // jarak 1-25 km -> hanya Kurir Toko (lokal), selain itu -> hanya Kurir Nasional
+        const pakaiKurirLokal = jarakKm >= 1 && jarakKm <= 25;
+
+        if (pakaiKurirLokal) {
             const fdLokal = new FormData();
             fdLokal.append("jarak", jarakKm);
+            fdLokal.append("sesi_user", sesiUserToko);
             fdLokal.append("_token", csrfToken);
-            promises.push(
-                fetch(hitungOngkirLokalUrl, { method: "POST", body: fdLokal })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.data && res.data.length > 0) {
-                            renderOngkirLokal(res.data, jarakKm);
-                        }
-                    })
-            );
+            fetch(hitungOngkirLokalUrl, { method: "POST", body: fdLokal })
+                .then(r => r.json())
+                .then(res => {
+                    if (ongkirRequestSeq !== requestSeq) return;
+                    if (res.data && res.data.length > 0) {
+                        renderOngkirLokal(res.data, jarakKm);
+                        loading.style.display = "none";
+                        hasil.style.display = "block";
+                    } else {
+                        // Kurir toko tidak tersedia -> otomatis pakai kurir nasional
+                        hitungOngkirNasional(destId, loading, hasil, requestSeq);
+                    }
+                })
+                .catch(() => {
+                    if (ongkirRequestSeq === requestSeq) hitungOngkirNasional(destId, loading, hasil, requestSeq);
+                });
+            return;
         }
 
+        // Di luar rentang kurir toko -> hanya kurir nasional
+        hitungOngkirNasional(destId, loading, hasil, requestSeq);
+    }
+
+    function hitungOngkirNasional(destId, loading, hasil, requestSeq) {
         const originId = kodeKotaToko;
-        if (originId && destId) {
-            let totalBerat = 0;
-            @foreach ($keranjang_terpilih as $item)
-                totalBerat += {{ ($item['berat_produk'] ?? 500) * ($item['jumlah_produk'] ?? 1) }};
-            @endforeach
-            if (totalBerat <= 0) totalBerat = 1000;
+        if (!originId || !destId) {
+            if (ongkirRequestSeq !== requestSeq) return;
+            loading.style.display = "none";
+            document.getElementById("daftar_ongkir_nasional").innerHTML =
+                '<div class="alert alert-warning">Tujuan pengiriman belum terdeteksi, silakan pindahkan penanda di peta.</div>';
+            document.getElementById("section_ongkir_nasional").style.display = 'block';
+            hasil.style.display = "block";
+            return;
+        }
 
-            const fdNasional = new FormData();
-            fdNasional.append("origin", originId);
-            fdNasional.append("destination", destId);
-            fdNasional.append("weight", totalBerat);
-            fdNasional.append("courier", "jne:jnt:sicepat");
-            fdNasional.append("_token", csrfToken);
-            promises.push(
-                fetch(hitungOngkirUrl, { method: "POST", body: fdNasional })
-                    .then(r => r.json())
-                    .then(res => {
-                        if (res.data && res.data.length > 0) {
-                            renderOngkirNasional(res.data);
-                        } else if (res.error) {
-                            document.getElementById("daftar_ongkir_nasional").innerHTML =
-                                '<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> ' + res.error + '</div>';
-                            document.getElementById("section_ongkir_nasional").style.display = 'block';
-                        }
-                    })
-            );
+        let totalBerat = 0;
+        @foreach ($keranjang_terpilih as $item)
+            totalBerat += {{ ($item['berat_produk'] ?? 500) * ($item['jumlah_produk'] ?? 1) }};
+        @endforeach
+        if (totalBerat <= 0) totalBerat = 1000;
 
-            Promise.all(promises).then(() => {
+        const fdNasional = new FormData();
+        fdNasional.append("origin", originId);
+        fdNasional.append("destination", destId);
+        fdNasional.append("weight", totalBerat);
+        fdNasional.append("courier", "jne:jnt:sicepat");
+        fdNasional.append("_token", csrfToken);
+
+        fetch(hitungOngkirUrl, { method: "POST", body: fdNasional })
+            .then(r => r.json())
+            .then(res => {
+                if (ongkirRequestSeq !== requestSeq) return;
                 loading.style.display = "none";
-                const hasLokal = document.getElementById("section_ongkir_lokal").style.display !== 'none';
-                const hasNasional = document.getElementById("section_ongkir_nasional").style.display !== 'none';
-                if (hasLokal || hasNasional) {
+                if (res.data && res.data.length > 0) {
+                    renderOngkirNasional(res.data);
+                    hasil.style.display = "block";
+                } else if (res.error) {
+                    document.getElementById("daftar_ongkir_nasional").innerHTML =
+                        '<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> ' + res.error + '</div>';
+                    document.getElementById("section_ongkir_nasional").style.display = 'block';
                     hasil.style.display = "block";
                 } else {
                     document.getElementById("daftar_ongkir_nasional").innerHTML =
@@ -286,13 +328,14 @@
                     document.getElementById("section_ongkir_nasional").style.display = 'block';
                     hasil.style.display = "block";
                 }
-            }).catch(err => {
+            })
+            .catch(() => {
+                if (ongkirRequestSeq !== requestSeq) return;
                 loading.style.display = "none";
                 document.getElementById("daftar_ongkir_nasional").innerHTML =
                     '<div class="alert alert-danger">Terjadi kesalahan saat menghitung ongkir.</div>';
                 document.getElementById("section_ongkir_nasional").style.display = 'block';
                 hasil.style.display = "block";
-                console.error("Ongkir error:", err);
             });
     }
 

@@ -102,6 +102,12 @@
                         </div>
                 
                     </div>
+
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <a href="{{ route('auth.lupa_password_user') }}" class="btn btn-link">Lupa Password?</a>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

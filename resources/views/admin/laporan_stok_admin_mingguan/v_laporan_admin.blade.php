@@ -34,6 +34,9 @@
                     <a href="{{ url('admin_laporan_mingguan/cetakLaporanStok') }}?start_date={{ $start_date }}&end_date={{ $end_date }}" class="btn btn-sm btn-success" target="_blank">
                         <i class="fa fa-print" aria-hidden="true"></i> Cetak Data
                     </a>
+                    <a href="{{ url('admin_laporan_mingguan/exportExcel') }}?start_date={{ $start_date }}&end_date={{ $end_date }}" class="btn btn-sm btn-primary">
+                        <i class="fa fa-file-excel-o" aria-hidden="true"></i> Export Excel
+                    </a>
                     <a href="{{ url('admin_laporan_mingguan/resetFilterStok') }}" class="btn btn-sm btn-secondary">
                         <i class="fa fa-refresh" aria-hidden="true"></i> Reset Filter
                     </a>

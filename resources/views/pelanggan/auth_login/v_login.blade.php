@@ -1,8 +1,8 @@
 @extends('layouts.app')
 @section('content')
-<div class="container">
+<div class="container pt-4 pt-lg-5 pb-5">
     <div class="row justify-content-center">
-        <div class="col-md-5 col-lg-4">
+        <div class="col-md-7 col-lg-6 col-xl-5">
             <div class="card border-0 shadow-lg" data-aos="fade-up">
                 <div class="card-body p-4 p-lg-5">
                     {{-- Header --}}
@@ -120,7 +120,7 @@
                         <p class="text-muted mb-0">Belum punya akun? <a href="{{ route('auth.register_pelanggan') }}" class="fw-semibold text-decoration-none">Daftar Sekarang</a></p>
                     </div>
                     <div class="text-center mt-2">
-                        <p class="text-muted mb-0 small">Ingin buka toko? <a href="{{ route('auth.register_user') }}" class="fw-semibold text-decoration-none">Daftar sebagai Penjual</a></p>
+                        <p class="text-muted mb-0 small">Ingin buka lapak jualan? <a href="{{ route('auth.register_user') }}" class="fw-semibold text-decoration-none">Daftar sebagai Penjual</a></p>
                     </div>
                 </div>
             </div>

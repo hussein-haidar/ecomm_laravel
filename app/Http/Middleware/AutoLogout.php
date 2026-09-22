@@ -21,7 +21,12 @@ class AutoLogout
             if (empty($loggedInAt)) {
                 session(['logged_in_at' => now()]);
             } else {
-                $expiresAt = Carbon::parse($loggedInAt)->addHours((int) config('session.max_active_hours'));
+                try {
+                    $expiresAt = Carbon::parse($loggedInAt)->addHours((int) config('session.max_active_hours'));
+                } catch (\Throwable $e) {
+                    // Data session bentrok/tidak valid (misal sisa sesi lama) -> tidak boleh memicu 500
+                    $expiresAt = now()->addHours((int) config('session.max_active_hours'));
+                }
 
                 if (now()->greaterThanOrEqualTo($expiresAt)) {
                     $isAjax = $request->expectsJson()

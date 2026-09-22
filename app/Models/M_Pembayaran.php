@@ -239,4 +239,32 @@ class M_Pembayaran extends Model
             Uploads::delete('qr', "qris_{$data->id_bayar}.png");
         }
     }
+
+    // Batalkan semua transaksi expired di semua pelanggan (dipakai cron)
+    public static function batalkanSemuaTransaksiExpired(): int
+    {
+        $idsPelanggan = DB::table('pembayaran')
+            ->where('batas_waktu_bayar', '<', now())
+            ->where('status_bayar', 'Belum Bayar')
+            ->whereNotNull('id_pelanggan')
+            ->distinct()
+            ->pluck('id_pelanggan');
+
+        $total = 0;
+
+        foreach ($idsPelanggan as $idPelanggan) {
+            $jumlahExpired = DB::table('pembayaran')
+                ->where('id_pelanggan', $idPelanggan)
+                ->where('batas_waktu_bayar', '<', now())
+                ->where('status_bayar', 'Belum Bayar')
+                ->count();
+
+            if ($jumlahExpired > 0) {
+                self::batalkanTransaksiExpiredByUser($idPelanggan);
+                $total += $jumlahExpired;
+            }
+        }
+
+        return $total;
+    }
 }

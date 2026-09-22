@@ -86,6 +86,15 @@
 
                     <div class="col-md-6">
                         <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email_user" class="form-control" placeholder="Masukkan Email (opsional)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
                             <label>Level User</label>
                             <select name="level" class="form-control" required>
                                 <option value="" disabled selected>Pilih Level</option>

@@ -47,13 +47,8 @@
     <div class="row justify-content-center">
         <div class="col-lg-11">
             <div class="card border-0 shadow-sm" data-aos="fade-up">
-                <div class="card-header bg-white border-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="card-header bg-white border-0">
                     <h4 class="fw-bold mb-0"><i class="fas fa-history me-2 text-primary"></i>Riwayat Pembelian</h4>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="{{ route('home_toko.katalog') }}" class="btn btn-primary rounded-pill px-4">
-                            <i class="fas fa-plus me-1"></i>Belanja Lagi
-                        </a>
-                    </div>
                 </div>
                 <div class="card-body p-4 p-lg-5">
                     {{-- Search --}}

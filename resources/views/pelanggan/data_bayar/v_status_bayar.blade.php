@@ -36,7 +36,7 @@
         <div class="col-lg-10">
             <div class="card border-0 shadow-sm" data-aos="fade-up">
                 <div class="card-header bg-white border-0">
-                    <h4 class="fw-bold mb-0"><i class="fas fa-credit-card me-2 text-primary"></i>Status Pembayaran</h4>
+                    <h4 class="fw-bold mb-0"><i class="fas fa-credit-card me-2 text-primary"></i>Menunggu Pembayaran</h4>
                 </div>
                 <div class="card-body p-4 p-lg-5">
                     @if(empty($pembayaran))

@@ -85,6 +85,7 @@ class Auth extends WebsiteController
         $request->validate([
             'username' => 'required|string|max:255',
             'fullname' => 'required|string|max:255',
+            'email_user' => 'nullable|email|max:255',
             'password' => 'required|string|max:255',
             'level' => 'required|max:100', // Pastikan level diterima
             'foto_user' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico|max:1024',
@@ -107,6 +108,7 @@ class Auth extends WebsiteController
                 'sesi_user' => $request->fullname,
                 'username' => $request->username,
                 'fullname' => $request->fullname,
+                'email_user' => $request->email_user,
                 'nama_title' => $request->nama_title,
                 'password' => Hash::make($request->password),
                 'level' => $request->level,  // Mengambil nilai level dari dropdown
@@ -217,14 +219,25 @@ class Auth extends WebsiteController
         $request->validate([
             'username' => 'required|string|max:255',
             'fullname' => 'required|string|max:255',
+            'email_user' => 'nullable|email|max:255',
             'password' => 'required|string|max:255',
             'level' => 'required|max:100', // Pastikan level diterima
             'foto_user' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico|max:1024',
+            'nama_toko' => 'required|string|max:100',
+            'wa_pusat' => 'nullable|string|max:20',
+            'alamat_pusat' => 'nullable|string|max:1000',
         ]);
 
-        // Handle the file upload
+        // Cek nama lapak/toko agar unik
+        if (DB::table('website')->where('nama_toko', $request->nama_toko)->exists()) {
+            return redirect()->route('auth.register_user')
+                ->withInput()
+                ->withErrors(['nama_toko' => 'Nama lapak/toko sudah dipakai, gunakan nama lain.']);
+        }
+
+        // Handle the file upload (opsional)
+        $fotoUser = null;
         if ($request->hasFile('foto_user') && $request->file('foto_user')->isValid()) {
-            // Get the uploaded file
             $file = $request->file('foto_user');
 
             // Generate a random file name using Str::random() and the file's extension
@@ -234,22 +247,45 @@ class Auth extends WebsiteController
             // Move the file to the 'fotouser' directory
             Uploads::store('fotouser', $file, $fileName);
 
-            // Store the user data into the database
-            M_User::create([
-                'sesi_user' => $request->fullname,
-                'username' => $request->username,
-                'fullname' => $request->fullname,
-                'nama_title' => $request->nama_title,
-                'password' => Hash::make($request->password),
-                'level' => $request->level,  // Mengambil nilai level dari dropdown
-                'foto_user' => $fileName,  // Store the file name in the database
+            $fotoUser = $fileName;
+        }
+
+        // Store the user data into the database
+        $user = M_User::create([
+            'sesi_user' => $request->fullname,
+            'username' => $request->username,
+            'fullname' => $request->fullname,
+            'email_user' => $request->email_user,
+            'nama_title' => $request->nama_title,
+            'password' => Hash::make($request->password),
+            'level' => $request->level,  // Mengambil nilai level dari dropdown
+            'foto_user' => $fotoUser,  // Store the file name in the database
+        ]);
+
+        // Otomatis buat data lapak (website) untuk penjual baru
+        if ($user && $request->filled('nama_toko')) {
+            DB::table('website')->insert([
+                'id_user' => $user->id_user,
+                'sesi_user' => $user->sesi_user,
+                'level' => 'pemilik',
+                'nama_toko' => $request->nama_toko,
+                'wa_pusat' => $request->wa_pusat,
+                'alamat_pusat' => $request->alamat_pusat,
+                'status_website' => 'Aktif',
             ]);
 
-            // Redirect with success message
-            return redirect()->route('auth.login_user')->with('pesan_success', 'User berhasil ditambahkan.');
-        } else {
-            return redirect()->route('auth.register_user')->with('error', 'File upload failed.');
+            // Otomatis buat kurir toko default untuk lapak baru
+            DB::table('kurir')->insert([
+                'sesi_user' => $user->sesi_user,
+                'jenis_kurir' => 'Kurir Internal',
+                'tipe_kurir' => 'instan',
+                'ongkir' => 1700,
+                'deleted_at' => 0,
+            ]);
         }
+
+        // Redirect with success message
+        return redirect()->route('auth.login_user')->with('pesan_success', 'User berhasil ditambahkan.');
     }
 
     // User methods
@@ -682,6 +718,157 @@ class Auth extends WebsiteController
 
         return redirect()->route('auth.login_pelanggan')
             ->with('pesan_success', 'Password berhasil diperbarui. Silakan login.');
+    }
+
+    // ============================================================
+    // FORGOT PASSWORD STAFF (superadmin / pemilik / admin)
+    // ============================================================
+
+    // Lupa Password View (staff)
+    public function lupa_password_user()
+    {
+        $data = [
+            'title' => 'Lupa Password',
+            'title2' => 'Lupa Password',
+        ];
+        return view('auth.v_lupa_password_user', $data);
+    }
+
+    // Cek username/email + kirim link reset berbasis token (staff)
+    public function cek_proses_user(Request $request)
+    {
+        $request->validate([
+            'username' => 'required|string',
+        ]);
+
+        $username = trim($request->input('username'));
+
+        // Boleh cari berdasarkan username ATAU email_user
+        $user = M_User::where('username', $username)
+            ->orWhere('email_user', $username)
+            ->first();
+
+        // Respons generik agar tidak membocorkan keberadaan akun
+        if (!$user) {
+            return back()->with('pesan', 'Jika username terdaftar, tautan reset password telah dikirim.');
+        }
+
+        // Simpan token reset (berlaku 60 menit)
+        $token = Str::random(64);
+
+        // Kunci penyimpanan: sesi key dari email_user (fallback: staff:username)
+        $tokenKey = $user->email_user ?: ('staff:' . $user->username);
+
+        DB::table('reset_password_tokens')->where('email', $tokenKey)->delete();
+        DB::table('reset_password_tokens')->insert([
+            'email' => $tokenKey,
+            'token' => hash('sha256', $token),
+            'created_at' => now(),
+        ]);
+
+        $link = route('auth.reset_password_user', ['token' => $token]);
+
+        try {
+            Mail::raw(
+                "Halo {$user->fullname},\n\n"
+                . "Kami menerima permintaan reset password untuk akun staff Anda.\n"
+                . "Klik tautan berikut untuk mengatur password baru (berlaku 60 menit):\n\n"
+                . $link . "\n\n"
+                . "Jika Anda tidak meminta reset password, abaikan email ini.",
+                function ($message) use ($user) {
+                    $message->to($user->email_user ?: config('mail.from.address', 'noreply@localhost'))
+                        ->subject('Reset Password - ' . config('app.name', 'Toko Online'));
+                }
+            );
+            $terkirim = true;
+        } catch (\Throwable $e) {
+            report($e);
+            $terkirim = false;
+        }
+
+        // Pada mode development (MAIL_MAILER=log), tampilkan link agar tetap bisa diuji
+        if (!$terkirim || config('mail.default') === 'log') {
+            return back()->with('pesan', 'Email reset dikirim.')
+                ->with('dev_reset_link', $link);
+        }
+
+        return back()->with('pesan', 'Jika username terdaftar, tautan reset password telah dikirim.');
+    }
+
+    // Reset Password View (validasi token) - staff
+    public function reset_password_user($token)
+    {
+        $row = DB::table('reset_password_tokens')
+            ->where('token', hash('sha256', $token))
+            ->where('created_at', '>=', now()->subMinutes(60))
+            ->first();
+
+        if (!$row) {
+            return redirect()->route('auth.lupa_password_user')
+                ->with('pesan_warning', 'Tautan reset tidak valid atau sudah kedaluwarsa. Silakan minta tautan baru.');
+        }
+
+        $user = $this->staffByTokenKey($row->email);
+
+        if (!$user) {
+            return redirect()->route('auth.lupa_password_user')
+                ->with('pesan_warning', 'Akun tidak ditemukan. Silakan minta tautan baru.');
+        }
+
+        $data = [
+            'title' => 'Reset Password',
+            'title2' => 'Reset Password',
+            'token' => $token,
+            'user' => $user,
+        ];
+
+        return view('auth.v_reset_password_user', $data);
+    }
+
+    public function ganti_password_user(Request $request, $token)
+    {
+        $request->validate([
+            'new_password' => 'required|min:6',
+            'confirm_password' => 'required|same:new_password',
+        ], [
+            'confirm_password.same' => 'Konfirmasi password tidak sama.',
+        ]);
+
+        $row = DB::table('reset_password_tokens')
+            ->where('token', hash('sha256', $token))
+            ->where('created_at', '>=', now()->subMinutes(60))
+            ->first();
+
+        if (!$row) {
+            return redirect()->route('auth.lupa_password_user')
+                ->with('pesan_warning', 'Tautan reset tidak valid atau sudah kedaluwarsa. Silakan minta tautan baru.');
+        }
+
+        $user = $this->staffByTokenKey($row->email);
+
+        if (!$user) {
+            return redirect()->route('auth.lupa_password_user')->with('pesan_warning', 'Akun tidak ditemukan.');
+        }
+
+        // Simpan password ter-hash (mengikuti pola registrasi staff yang sudah ada)
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        // Token sekali pakai
+        DB::table('reset_password_tokens')->where('email', $row->email)->delete();
+
+        return redirect()->route('auth.login_user')
+            ->with('pesan_success', 'Password berhasil diperbarui. Silakan login.');
+    }
+
+    // Cari staff berdasarkan key token (email_user atau staff:username)
+    private function staffByTokenKey($tokenKey)
+    {
+        if (Str::startsWith($tokenKey, 'staff:')) {
+            return M_User::where('username', substr($tokenKey, 6))->first();
+        }
+
+        return M_User::where('email_user', $tokenKey)->first();
     }
 
     // Logout

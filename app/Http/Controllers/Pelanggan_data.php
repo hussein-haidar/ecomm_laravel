@@ -681,7 +681,18 @@ class Pelanggan_data extends WebsiteController
             return $item['harga_produk'] * $item['jumlah_produk'];
         }, $keranjangTerpilih));
 
-        $dataToko = M_Website::first();
+        // Ambil lapak/toko asal dari item keranjang (tiap item membawa sesi_user & nama_toko)
+        $namaTokoLapak = $keranjangTerpilih[0]['nama_toko'] ?? '';
+        $websiteLapak = null;
+        if (!empty($namaTokoLapak)) {
+            $websiteLapak = DB::table('website')
+                ->where('nama_toko', $namaTokoLapak)
+                ->orderByDesc('id_website')
+                ->first();
+        }
+
+        // Bila item tidak membawa lapak, fallback ke website pertama
+        $dataToko = $websiteLapak ?: M_Website::first();
         $latitudeToko = $dataToko->latitude_pusat ?? -6.9175;
         $longitudeToko = $dataToko->longitude_pusat ?? 107.6191;
 
@@ -721,6 +732,7 @@ class Pelanggan_data extends WebsiteController
             'latitude_pusat' => $latitudeToko,
             'longitude_pusat' => $longitudeToko,
             'nama_toko' => $dataToko->nama_toko ?? '',
+            'sesi_user_toko' => $dataToko->sesi_user ?? '',
             'alamat_toko' => $dataToko->alamat_pusat ?? '',
             'kode_kota_toko' => $kodeKotaToko,
             'nama_kota_toko' => $namaKotaToko,
@@ -846,13 +858,23 @@ class Pelanggan_data extends WebsiteController
             return response()->json(['data' => []]);
         }
 
-        $dataToko = M_Website::first();
-        if (!$dataToko) {
-            return response()->json(['error' => 'Data toko tidak ditemukan.']);
+        // Sesuai lapak pembeli (dikirim dari halaman checkout)
+        $sesiUserToko = $request->input('sesi_user', '');
+        if (empty($sesiUserToko)) {
+            $dataToko = M_Website::first();
+            $sesiUserToko = $dataToko->sesi_user ?? '';
+            if (!$dataToko) {
+                return response()->json(['error' => 'Data toko tidak ditemukan.']);
+            }
         }
 
-        $sesiUserToko = $dataToko->sesi_user ?? '';
+        // Kurir milik lapak tersebut (kurir toko)
         $kurirList = M_Kurir::where('deleted_at', 0)->where('sesi_user', $sesiUserToko)->get();
+
+        // Bila lapak belum punya kurir, fallback ke kurir internal default
+        if ($kurirList->isEmpty()) {
+            $kurirList = M_Kurir::where('deleted_at', 0)->where('jenis_kurir', 'Kurir Internal')->get();
+        }
 
         if ($kurirList->isEmpty()) {
             $kurirList = M_Kurir::where('deleted_at', 0)->get();
@@ -936,8 +958,18 @@ class Pelanggan_data extends WebsiteController
             return $item['harga_produk'] * $item['jumlah_produk'];
         }, $keranjangTerpilih));
 
-        // Ambil lokasi toko pusat
-        $dataToko = M_Website::first();
+        // Ambil lapak/toko asal dari item keranjang (tiap item membawa sesi_user & nama_toko)
+        $namaTokoLapak = $keranjangTerpilih[0]['nama_toko'] ?? '';
+        $websiteLapak = null;
+        if (!empty($namaTokoLapak)) {
+            $websiteLapak = DB::table('website')
+                ->where('nama_toko', $namaTokoLapak)
+                ->orderByDesc('id_website')
+                ->first();
+        }
+
+        // Bila item tidak membawa lapak, fallback ke website pertama
+        $dataToko = $websiteLapak ?: M_Website::first();
         $latitudeToko = $dataToko->latitude_pusat ?? -6.9175;
         $longitudeToko = $dataToko->longitude_pusat ?? 107.6191;
 
@@ -981,6 +1013,7 @@ class Pelanggan_data extends WebsiteController
             'latitude_pusat' => $latitudeToko,
             'longitude_pusat' => $longitudeToko,
             'nama_toko' => $dataToko->nama_toko ?? '',
+            'sesi_user_toko' => $dataToko->sesi_user ?? '',
             'alamat_toko' => $dataToko->alamat_pusat ?? '',
             'kode_kota_toko' => $kodeKotaToko,
             'nama_kota_toko' => $namaKotaToko,
@@ -1324,7 +1357,17 @@ class Pelanggan_data extends WebsiteController
 
         $totalSemua = $item['harga_produk'] * $item['jumlah_produk'];
 
-        $dataToko = M_Website::first();
+        // Ambil lapak/toko asal dari item beli langsung (item membawa sesi_user & nama_toko)
+        $websiteLapak = null;
+        if (!empty($item['nama_toko'])) {
+            $websiteLapak = DB::table('website')
+                ->where('nama_toko', $item['nama_toko'])
+                ->orderByDesc('id_website')
+                ->first();
+        }
+
+        // Bila item tidak membawa lapak, fallback ke website pertama
+        $dataToko = $websiteLapak ?: M_Website::first();
         $latitude_pusat = $dataToko->latitude_pusat ?? -6.9175;
         $longitude_pusat = $dataToko->longitude_pusat ?? 107.6191;
 
@@ -1365,6 +1408,7 @@ class Pelanggan_data extends WebsiteController
             'latitude_pusat' => $latitude_pusat,
             'longitude_pusat' => $longitude_pusat,
             'nama_toko' => $dataToko->nama_toko ?? '',
+            'sesi_user_toko' => $dataToko->sesi_user ?? '',
             'alamat_toko' => $dataToko->alamat_pusat ?? '',
             'kode_kota_toko' => $kode_kota_toko,
             'nama_kota_toko' => $nama_kota_toko,
@@ -1923,6 +1967,19 @@ class Pelanggan_data extends WebsiteController
         ];
 
         return view('pelanggan.ekspedisi.v_status_kirim', $data);
+    }
+
+    // Endpoint AJAX: perbarui status pengiriman otomatis (route sebelumnya mati/500)
+    public function updateStatusOtomatis(Request $request)
+    {
+        $id_pelanggan = session('id_pelanggan');
+
+        M_Ekspedisi::updateStatusOtomatis($id_pelanggan, true);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status pengiriman diperbarui secara otomatis.',
+        ]);
     }
 
     public function tracking($id_beli)

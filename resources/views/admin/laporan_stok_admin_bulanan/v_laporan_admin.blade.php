@@ -33,6 +33,9 @@
                 <a href="{{ url('admin_laporan_bulanan/cetakLaporanStok') }}?start_month={{ $start_month }}&end_month={{ $end_month }}" class="btn btn-sm btn-success mt-3" target="_blank">
                     <i class="fa fa-print" aria-hidden="true"></i> Cetak Data
                 </a>
+                <a href="{{ url('admin_laporan_bulanan/exportExcel') }}?start_month={{ $start_month }}&end_month={{ $end_month }}" class="btn btn-sm btn-primary mt-3">
+                    <i class="fa fa-file-excel-o" aria-hidden="true"></i> Export Excel
+                </a>
                 <a href="{{ url('admin_laporan_bulanan/resetFilterStok') }}" class="btn btn-sm btn-secondary mt-3">
                     <i class="fa fa-refresh" aria-hidden="true"></i> Reset Filter
                 </a>

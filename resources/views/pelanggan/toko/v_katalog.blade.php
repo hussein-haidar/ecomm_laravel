@@ -191,13 +191,6 @@
 
             <!-- Products Area -->
             <div class="col-lg-9">
-                <!-- Mobile Filter Trigger -->
-                <div class="d-lg-none mb-3" data-aos="fade-up">
-                    <button type="button" class="btn btn-outline-primary w-100 rounded-pill py-2 fw-semibold" onclick="openFilterSheet(event)">
-                        <i class="fas fa-filter me-2"></i>Filter Produk
-                    </button>
-                </div>
-
                 <!-- Results Header -->
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4" data-aos="fade-up">
                     <div>
@@ -222,33 +215,52 @@
                     </div>
                     <div class="d-flex gap-2">
                         <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-start-pill {{ !request('view') || request('view') == 'grid' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->all(), ['view' => 'grid'])) }}'" aria-label="Grid View">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-start-pill {{ $viewMode == 'grid' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->all(), ['view' => 'grid'])) }}'" aria-label="Grid View">
                                 <i class="fas fa-th-large"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-end-pill {{ request('view') == 'list' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->all(), ['view' => 'list'])) }}'" aria-label="List View">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-end-pill {{ $viewMode == 'list' ? 'active' : '' }}" onclick="window.location='{{ route('home_toko.katalog', array_merge(request()->all(), ['view' => 'list'])) }}'" aria-label="List View">
                                 <i class="fas fa-list"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Product Grid -->
-                <div class="row g-4" id="productGrid">
-                    @if(empty($produk_data))
-                        <div class="col-12 text-center py-5" data-aos="fade-up">
-                            <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
-                            <h4 class="text-muted">Tidak Ada Produk</h4>
-                            <p class="text-muted">Tidak ditemukan produk yang sesuai dengan kriteria pencarian Anda.</p>
-                            <a href="{{ route('home_toko.katalog') }}" class="btn btn-primary rounded-pill px-4 mt-3">
-                                <i class="fas fa-arrow-left me-1"></i>Lihat Semua Produk
-                            </a>
-                        </div>
-                    @else
-                        @foreach($produk_data as $produk)
-                            @include('layouts.v_produk_item', ['produk' => $produk, 'loop' => $loop])
-                        @endforeach
-                    @endif
-                </div>
+                <!-- Product Grid / List -->
+                @if($viewMode == 'list')
+                    <div class="list-view" id="productList">
+                        @if(empty($produk_data))
+                            <div class="col-12 text-center py-5" data-aos="fade-up">
+                                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                                <h4 class="text-muted">Tidak Ada Produk</h4>
+                                <p class="text-muted">Tidak ditemukan produk yang sesuai dengan kriteria pencarian Anda.</p>
+                                <a href="{{ route('home_toko.katalog') }}" class="btn btn-primary rounded-pill px-4 mt-3">
+                                    <i class="fas fa-arrow-left me-1"></i>Lihat Semua Produk
+                                </a>
+                            </div>
+                        @else
+                            @foreach($produk_data as $produk)
+                                @include('layouts.v_produk_item_list', ['produk' => $produk, 'loop' => $loop])
+                            @endforeach
+                        @endif
+                    </div>
+                @else
+                    <div class="row g-4" id="productGrid">
+                        @if(empty($produk_data))
+                            <div class="col-12 text-center py-5" data-aos="fade-up">
+                                <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
+                                <h4 class="text-muted">Tidak Ada Produk</h4>
+                                <p class="text-muted">Tidak ditemukan produk yang sesuai dengan kriteria pencarian Anda.</p>
+                                <a href="{{ route('home_toko.katalog') }}" class="btn btn-primary rounded-pill px-4 mt-3">
+                                    <i class="fas fa-arrow-left me-1"></i>Lihat Semua Produk
+                                </a>
+                            </div>
+                        @else
+                            @foreach($produk_data as $produk)
+                                @include('layouts.v_produk_item', ['produk' => $produk, 'loop' => $loop])
+                            @endforeach
+                        @endif
+                    </div>
+                @endif
 
                 <!-- Pagination -->
                 @if($produk_data instanceof \Illuminate\Pagination\LengthAwarePaginator && $produk_data->lastPage() > 1)
@@ -262,116 +274,4 @@
         </div>
     </div>
 </section>
-
-<!-- Mobile Filter Bottom Sheet -->
-<div class="filter-sheet-overlay" id="filterSheetOverlay" onclick="closeFilterSheet()" aria-hidden="true"></div>
-<div class="filter-sheet" id="filterSheet" role="dialog" aria-modal="true" aria-labelledby="filterSheetTitle">
-    <div class="filter-sheet-handle" onclick="closeFilterSheet()" aria-label="Tutup filter"></div>
-    <div class="filter-sheet-header d-flex justify-content-between align-items-center">
-        <h5 id="filterSheetTitle" class="filter-sheet-title fw-bold mb-0"><i class="fas fa-filter me-2"></i>Filter Produk</h5>
-        <button type="button" class="btn-close" onclick="closeFilterSheet()" aria-label="Tutup filter"></button>
-    </div>
-    <div class="filter-sheet-body p-4">
-        <form method="GET" action="{{ route('home_toko.katalog') }}">
-            <div class="mb-3">
-                <label class="form-label fw-medium">Cari Produk</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="fas fa-search"></i></span>
-                    <input type="text" name="keyword" class="form-control" placeholder="Cari..." value="{{ request('keyword') }}">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label for="jenis_produk_mobile" class="form-label fw-medium">Kategori</label>
-                <select name="jenis_produk" id="jenis_produk_mobile" class="form-select">
-                    <option value="">Semua Kategori</option>
-                    @foreach($jenis_produk_dropdown ?? [] as $jenis)
-                        <option value="{{ $jenis['jenis_produk'] }}" {{ request('jenis_produk') == $jenis['jenis_produk'] ? 'selected' : '' }}>
-                            {{ $jenis['jenis_produk'] }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-medium">Rentang Harga</label>
-                <div class="input-group">
-                    <span class="input-group-text">Rp</span>
-                    <input type="number" name="harga_min" class="form-control" placeholder="Min" value="{{ request('harga_min') }}" min="0">
-                    <span class="input-group-text">-</span>
-                    <span class="input-group-text">Rp</span>
-                    <input type="number" name="harga_max" class="form-control" placeholder="Max" value="{{ request('harga_max') }}" min="0">
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-medium">Rating / Ulasan</label>
-                <div class="d-flex flex-column gap-1">
-                    @for($i = 5; $i >= 1; $i--)
-                        <div class="form-check form-check-sm">
-                            <input class="form-check-input" type="checkbox" name="rating[]" value="{{ $i }}" id="rating_mobile_{{ $i }}" {{ in_array((string)$i, request('rating', [])) ? 'checked' : '' }}>
-                            <label class="form-check-label small text-warning" for="rating_mobile_{{ $i }}">
-                                @for($j = 1; $j <= $i; $j++) <i class="fas fa-star"></i> @endfor
-                                {{ $i }}+ bintang
-                            </label>
-                        </div>
-                    @endfor
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-medium">Urutkan Harga</label>
-                <select name="sort_harga" class="form-select">
-                    <option value="" {{ request('sort_harga') == '' ? 'selected' : '' }}>Default</option>
-                    <option value="asc" {{ request('sort_harga') == 'asc' ? 'selected' : '' }}>Terendah</option>
-                    <option value="desc" {{ request('sort_harga') == 'desc' ? 'selected' : '' }}>Tertinggi</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label fw-medium">Urutkan Nama</label>
-                <select name="sort_nama" class="form-select">
-                    <option value="" {{ request('sort_nama') == '' ? 'selected' : '' }}>Default</option>
-                    <option value="a-z" {{ request('sort_nama') == 'a-z' ? 'selected' : '' }}>A - Z</option>
-                    <option value="z-a" {{ request('sort_nama') == 'z-a' ? 'selected' : '' }}>Z - A</option>
-                </select>
-            </div>
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-primary rounded-pill py-2 fw-semibold">
-                    <i class="fas fa-filter me-1"></i>Terapkan Filter
-                </button>
-                <a href="{{ route('home_toko.katalog') }}" class="btn btn-outline-secondary rounded-pill py-2">Reset Filter</a>
-            </div>
-        </form>
-    </div>
-</div>
-
-@push('scripts')
-<script>
-    // Mobile filter sheet toggle
-    window.openFilterSheet = function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        const sheet = document.getElementById('filterSheet');
-        const overlay = document.getElementById('filterSheetOverlay');
-        if (sheet && overlay) {
-            sheet.classList.add('active');
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-    };
-
-    window.closeFilterSheet = function() {
-        const sheet = document.getElementById('filterSheet');
-        const overlay = document.getElementById('filterSheetOverlay');
-        if (sheet && overlay) {
-            sheet.classList.remove('active');
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    };
-
-    // Close filter on escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            window.closeFilterSheet();
-        }
-    });
-</script>
-@endpush
 @endsection

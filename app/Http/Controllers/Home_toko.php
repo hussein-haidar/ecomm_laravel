@@ -148,6 +148,7 @@ class Home_toko extends WebsiteController
         $sortBy = $sortHarga ?: $sortNama;
         $ratingFilter = $request->input('rating', []); // array of star values like ['4','5']
         $minRating = $ratingFilter ? min(array_map('intval', $ratingFilter)) : null;
+        $viewMode = $request->input('view', 'grid'); // 'grid' or 'list'
 
         // Ambil dropdown dulu
         $jenis_produk_dropdown = $this->M_Home_toko->getJenisProdukDropdown();
@@ -215,6 +216,7 @@ class Home_toko extends WebsiteController
             'jenis_produk_dropdown' => $jenis_produk_dropdown,
             'filter_params' => compact('keyword', 'hargaMin', 'hargaMax', 'sortHarga', 'sortNama', 'jenisProduk', 'ratingFilter'),
             'user_logged_in' => $session->get('user_logged_in') === true,
+            'viewMode' => $viewMode,
         ];
 
         return view('pelanggan.toko.v_katalog', $data);

@@ -223,12 +223,14 @@ Route::middleware([FilterAdmin::class])->group(function () {
     Route::get('admin_laporan_mingguan/laporanStok', [Admin_laporan_mingguan::class, 'laporanStok'])->name('admin_laporan_mingguan.laporanStok');
     Route::get('admin_laporan_mingguan/filterStokByDate', [Admin_laporan_mingguan::class, 'filterStokByDate'])->name('admin_laporan_mingguan.filterStokByDate');
     Route::get('admin_laporan_mingguan/cetakLaporanStok', [Admin_laporan_mingguan::class, 'cetakLaporanStok'])->name('admin_laporan_mingguan.cetakLaporanStok');
+    Route::get('admin_laporan_mingguan/exportExcel', [Admin_laporan_mingguan::class, 'exportExcel'])->name('admin_laporan_mingguan.exportExcel');
     Route::get('admin_laporan_mingguan/resetFilterStok', [Admin_laporan_mingguan::class, 'resetFilterStok'])->name('admin_laporan_mingguan.resetFilterStok');
 
     Route::get('admin_laporan_bulanan/laporanStok', [Admin_laporan_bulanan::class, 'laporanStok'])->name('admin_laporan_bulanan.laporanStok');
     // Route untuk GET dan POST
     Route::match(['get', 'post'], 'admin_laporan_bulanan/filterStokByMonth', [Admin_laporan_bulanan::class, 'filterStokByMonth'])->name('admin_laporan_bulanan.filterStokByMonth');
     Route::get('admin_laporan_bulanan/cetakLaporanStok', [Admin_laporan_bulanan::class, 'cetakLaporanStok'])->name('admin_laporan_bulanan.cetakLaporanStok');
+    Route::get('admin_laporan_bulanan/exportExcel', [Admin_laporan_bulanan::class, 'exportExcel'])->name('admin_laporan_bulanan.exportExcel');
     Route::get('admin_laporan_bulanan/resetFilterStok', [Admin_laporan_bulanan::class, 'resetFilterStok'])->name('admin_laporan_bulanan.resetFilterStok');
 
     // Laporan Penjualan
@@ -258,6 +260,12 @@ Route::post('auth/cek_proses', [Auth::class, 'cek_proses'])->name('auth.cek_pros
 Route::get('auth/reset_password/{token}', [Auth::class, 'reset_password'])->name('auth.reset_password');
 // Proses ganti password - POST dengan token
 Route::post('auth/ganti_password/{token}', [Auth::class, 'ganti_password'])->name('auth.ganti_password');
+
+// Lupa password STAFF (superadmin / pemilik / admin)
+Route::get('auth/lupa_password_user', [Auth::class, 'lupa_password_user'])->name('auth.lupa_password_user');
+Route::post('auth/cek_proses_user', [Auth::class, 'cek_proses_user'])->name('auth.cek_proses_user');
+Route::get('auth/reset_password_user/{token}', [Auth::class, 'reset_password_user'])->name('auth.reset_password_user');
+Route::post('auth/ganti_password_user/{token}', [Auth::class, 'ganti_password_user'])->name('auth.ganti_password_user');
 
 // Rute untuk toko (filter berdasarkan level)  
 Route::get('home_toko/view_toko/{nama_toko}', [Home_toko::class, 'view_toko'])->name('view.toko');
