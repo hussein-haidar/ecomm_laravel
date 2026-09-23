@@ -734,18 +734,9 @@ class Admin_data extends Controller
             'updated_at' => now(),
         ]);
 
-        try {
-            M_Notifikasi::kirim([
-                'id_pelanggan' => $retur->id_pelanggan,
-                'nama_pelanggan' => $retur->nama_pelanggan,
-                'judul' => 'Retur Selesai',
-                'pesan' => "Retur {$retur->kode_retur} telah selesai diproses. Terima kasih.",
-                'tipe' => 'sukses',
-                'link' => route('pelanggan_data.detailRetur', $id_retur),
-            ]);
-        } catch (\Throwable $e) {
-            Log::warning('Gagal kirim notifikasi retur selesai: ' . $e->getMessage());
-        }
+        // Kirim notifikasi in-app + email auto-refund
+        $retur = M_Retur::where('id_retur', $id_retur)->first();
+        M_Retur::notifikasiSelesai($retur);
 
         Session::flash('success', 'Retur diselesaikan.');
         return redirect()->route('admin_data.detail_retur', $id_retur);

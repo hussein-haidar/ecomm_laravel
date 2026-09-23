@@ -19,6 +19,9 @@ use App\Models\M_Kupon;
 use App\Models\M_FlashSale;
 use App\Models\M_LaporanPenjualan;
 use App\Support\Uploads;
+use App\Models\M_Retur;
+use App\Models\M_Notifikasi;
+use Illuminate\Support\Facades\Log;
 
 class Pemilik_data extends Controller
 {
@@ -1353,6 +1356,194 @@ if ($website->logo_website != "") {
 
         session()->flash('pesan', 'Flash sale berhasil dihapus!');
         return redirect()->route('pemilik_data.flash_sale');
+    }
+
+    // ==================== RETUR / PENGEMBALIAN (PEMILIK) ====================
+
+    public function view_retur(Request $request)
+    {
+        $sesiUser = Session::get('sesi_user');
+
+        $keyword = $request->input('search', '');
+        $statusFilter = $request->input('status', '');
+
+        $retur = M_Retur::getReturAdmin($sesiUser, $keyword, $statusFilter);
+
+        return view('pemilik.retur.v_retur', [
+            'title' => 'Data Retur',
+            'title2' => 'Data Retur & Pengembalian',
+            'retur' => $retur,
+        ]);
+    }
+
+    public function detail_retur($id_retur)
+    {
+        $sesiUser = Session::get('sesi_user');
+
+        $detail = M_Retur::detailRetur($id_retur);
+
+        if (!$detail || $detail->sesi_user != $sesiUser) {
+            Session::flash('error', 'Data retur tidak ditemukan.');
+            return redirect()->route('pemilik_data.view_retur');
+        }
+
+        return view('pemilik.retur.v_detail_retur', [
+            'title' => 'Detail Retur',
+            'title2' => 'Detail Retur',
+            'retur' => $detail,
+        ]);
+    }
+
+    public function verifikasi_retur(Request $request, $id_retur)
+    {
+        $sesiUser = Session::get('sesi_user');
+
+        $request->validate([
+            'keputusan' => 'required|in:setuju,tolak',
+            'catatan_admin' => 'nullable|string|max:2000',
+        ]);
+
+        $retur = M_Retur::where('id_retur', $id_retur)
+            ->where('sesi_user', $sesiUser)
+            ->first();
+
+        if (!$retur) {
+            Session::flash('error', 'Data retur tidak ditemukan.');
+            return redirect()->route('pemilik_data.view_retur');
+        }
+
+        if ($retur->status !== 'Menunggu Verifikasi') {
+            Session::flash('error', 'Retur hanya bisa diverifikasi pada status "Menunggu Verifikasi".');
+            return redirect()->route('pemilik_data.detail_retur', $id_retur);
+        }
+
+        if ($request->keputusan === 'setuju') {
+            M_Retur::where('id_retur', $id_retur)->update([
+                'status' => 'Disetujui',
+                'catatan_admin' => $request->catatan_admin,
+                'waktu_verifikasi' => now(),
+                'updated_at' => now(),
+            ]);
+
+            try {
+                M_Notifikasi::kirim([
+                    'id_pelanggan' => $retur->id_pelanggan,
+                    'nama_pelanggan' => $retur->nama_pelanggan,
+                    'judul' => 'Retur Disetujui',
+                    'pesan' => "Retur {$retur->kode_retur} disetujui. Silakan kirim barang kembali sesuai instruksi.",
+                    'tipe' => 'sukses',
+                    'link' => route('pelanggan_data.detailRetur', $id_retur),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notifikasi retur setuju: ' . $e->getMessage());
+            }
+
+            Session::flash('success', "Retur {$retur->kode_retur} disetujui.");
+        } else {
+            M_Retur::where('id_retur', $id_retur)->update([
+                'status' => 'Ditolak',
+                'catatan_admin' => $request->catatan_admin,
+                'waktu_verifikasi' => now(),
+                'updated_at' => now(),
+            ]);
+
+            try {
+                M_Notifikasi::kirim([
+                    'id_pelanggan' => $retur->id_pelanggan,
+                    'nama_pelanggan' => $retur->nama_pelanggan,
+                    'judul' => 'Retur Ditolak',
+                    'pesan' => "Retur {$retur->kode_retur} ditolak. " . ($request->catatan_admin ?: 'Saat ini tidak memenuhi syarat retur.'),
+                    'tipe' => 'peringatan',
+                    'link' => route('pelanggan_data.detailRetur', $id_retur),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim notifikasi retur tolak: ' . $e->getMessage());
+            }
+
+            Session::flash('success', "Retur {$retur->kode_retur} ditolak.");
+        }
+
+        return redirect()->route('pemilik_data.detail_retur', $id_retur);
+    }
+
+    public function terima_retur($id_retur)
+    {
+        $sesiUser = Session::get('sesi_user');
+
+        $retur = M_Retur::where('id_retur', $id_retur)
+            ->where('sesi_user', $sesiUser)
+            ->first();
+
+        if (!$retur) {
+            Session::flash('error', 'Data retur tidak ditemukan.');
+            return redirect()->route('pemilik_data.view_retur');
+        }
+
+        if ($retur->status !== 'Barang Dalam Perjalanan') {
+            Session::flash('error', 'Barang retur hanya bisa diterima pada status "Barang Dalam Perjalanan".');
+            return redirect()->route('pemilik_data.detail_retur', $id_retur);
+        }
+
+        M_Retur::where('id_retur', $id_retur)->update([
+            'status' => 'Barang Diterima',
+            'updated_at' => now(),
+        ]);
+
+        try {
+            M_Notifikasi::kirim([
+                'id_pelanggan' => $retur->id_pelanggan,
+                'nama_pelanggan' => $retur->nama_pelanggan,
+                'judul' => 'Barang Retur Diterima',
+                'pesan' => "Barang retur {$retur->kode_retur} telah diterima toko dan sedang diproses.",
+                'tipe' => 'sukses',
+                'link' => route('pelanggan_data.detailRetur', $id_retur),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notifikasi retur terima: ' . $e->getMessage());
+        }
+
+        Session::flash('success', 'Barang retur diterima.');
+        return redirect()->route('pemilik_data.detail_retur', $id_retur);
+    }
+
+    public function selesaikan_retur(Request $request, $id_retur)
+    {
+        $sesiUser = Session::get('sesi_user');
+
+        $request->validate([
+            'jumlah_refund' => 'nullable|numeric|min:0',
+            'status_refund' => 'nullable|in:Belum Diproses,Refund Diproses,Refund Selesai',
+        ]);
+
+        $retur = M_Retur::where('id_retur', $id_retur)
+            ->where('sesi_user', $sesiUser)
+            ->first();
+
+        if (!$retur) {
+            Session::flash('error', 'Data retur tidak ditemukan.');
+            return redirect()->route('pemilik_data.view_retur');
+        }
+
+        if (!in_array($retur->status, ['Barang Diterima', 'Selesai'])) {
+            Session::flash('error', 'Retur hanya bisa diselesaikan saat barang sudah diterima.');
+            return redirect()->route('pemilik_data.detail_retur', $id_retur);
+        }
+
+        M_Retur::where('id_retur', $id_retur)->update([
+            'status' => 'Selesai',
+            'jumlah_refund' => $request->jumlah_refund ?: 0,
+            'status_refund' => $request->status_refund ?: 'Belum Diproses',
+            'catatan_admin' => $request->catatan_admin ?? $retur->catatan_admin,
+            'waktu_selesai' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Kirim notifikasi in-app + email auto-refund
+        $retur = M_Retur::where('id_retur', $id_retur)->first();
+        M_Retur::notifikasiSelesai($retur);
+
+        Session::flash('success', 'Retur diselesaikan.');
+        return redirect()->route('pemilik_data.detail_retur', $id_retur);
     }
 
 }

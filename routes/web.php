@@ -185,6 +185,13 @@ Route::middleware([FilterPemilik::class])->group(function () {
     Route::post('pemilik_data/update_flash_sale/{id_flash_sale}', [Pemilik_data::class, 'update_flash_sale'])->name('pemilik_data.update_flash_sale');
     Route::delete('pemilik_data/delete_flash_sale/{id_flash_sale}', [Pemilik_data::class, 'delete_flash_sale'])->name('pemilik_data.delete_flash_sale');
 
+    // Retur & Pengembalian
+    Route::get('pemilik_data/retur', [Pemilik_data::class, 'view_retur'])->name('pemilik_data.view_retur');
+    Route::get('pemilik_data/retur/detail/{id_retur}', [Pemilik_data::class, 'detail_retur'])->name('pemilik_data.detail_retur');
+    Route::post('pemilik_data/retur/verifikasi/{id_retur}', [Pemilik_data::class, 'verifikasi_retur'])->name('pemilik_data.verifikasi_retur');
+    Route::post('pemilik_data/retur/terima/{id_retur}', [Pemilik_data::class, 'terima_retur'])->name('pemilik_data.terima_retur');
+    Route::post('pemilik_data/retur/selesai/{id_retur}', [Pemilik_data::class, 'selesaikan_retur'])->name('pemilik_data.selesaikan_retur');
+
 
 });
 

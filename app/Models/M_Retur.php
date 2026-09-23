@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class M_Retur extends Model
 {
@@ -163,5 +165,51 @@ class M_Retur extends Model
             ->where('sesi_user', $sesiUser)
             ->whereNotIn('status', ['Selesai', 'Ditolak', 'Dibatalkan'])
             ->count();
+    }
+
+    // Kirim notifikasi in-app + email (auto-refund) saat retur selesai
+    public static function notifikasiSelesai($retur)
+    {
+        $kode = $retur->kode_retur;
+        $refundInfo = '';
+        if ($retur->tipe_retur === 'pengembalian_dana' && $retur->jumlah_refund > 0) {
+            $refundInfo = ' Pengembalian dana Rp ' . number_format($retur->jumlah_refund, 0, ',', '.')
+                . ' (' . ($retur->status_refund ?: 'Belum Diproses') . ').';
+        }
+
+        // Notifikasi in-app untuk pelanggan
+        try {
+            M_Notifikasi::kirim([
+                'id_pelanggan' => $retur->id_pelanggan,
+                'nama_pelanggan' => $retur->nama_pelanggan,
+                'judul' => 'Retur Selesai',
+                'pesan' => "Retur {$kode} telah selesai diproses." . $refundInfo,
+                'tipe' => 'sukses',
+                'link' => route('pelanggan_data.detailRetur', $retur->id_retur),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal kirim notifikasi retur selesai: ' . $e->getMessage());
+        }
+
+        // Email auto-refund ke pelanggan
+        $emailPelanggan = DB::table('pelanggan')
+            ->where('id_pelanggan', $retur->id_pelanggan)
+            ->value('email');
+
+        if ($emailPelanggan) {
+            try {
+                Mail::raw(
+                    "Halo {$retur->nama_pelanggan},\n\n"
+                    . "Retur {$kode} untuk produk \"{$retur->nama_produk}\" telah selesai diproses." . $refundInfo . "\n\n"
+                    . "Terima kasih telah berbelanja di toko kami.",
+                    function ($message) use ($emailPelanggan, $kode) {
+                        $message->to($emailPelanggan)
+                            ->subject("Status Retur Selesai - {$kode}");
+                    }
+                );
+            } catch (\Throwable $e) {
+                Log::warning('Gagal kirim email auto-refund retur: ' . $e->getMessage());
+            }
+        }
     }
 }

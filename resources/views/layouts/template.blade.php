@@ -452,6 +452,21 @@
                             </ul>
                         </li>
 
+                        <li class="header">RETURN NAVIGATION</li>
+                        <li>
+                            <a href="{{ route('pemilik_data.view_retur') }}">
+                                <i class="fa fa-undo"></i> <span>Retur & Pengembalian</span>
+                                @php
+                                    $jumlahReturPemilik = \App\Models\M_Retur::countReturAktif(session()->get('sesi_user'));
+                                @endphp
+                                @if ($jumlahReturPemilik > 0)
+                                    <span class="pull-right-container">
+                                        <span class="label label-warning pull-right">{{ $jumlahReturPemilik }}</span>
+                                    </span>
+                                @endif
+                            </a>
+                        </li>
+
                         <li class="header">USERS NAVIGATION</li>
                         <li>
                             <a href="{{ url('pemilik_data/user') }}">
