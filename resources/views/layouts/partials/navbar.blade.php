@@ -154,6 +154,7 @@ $user_logged_in = session()->has('user_logged_in') && session('user_logged_in');
                             <li><a class="dropdown-item" href="{{ route('pelanggan_data.statusKirim') }}"><i class="fas fa-truck me-2"></i>Pengiriman</a></li>
                             <li><a class="dropdown-item" href="{{ route('pelanggan_data.riwayatBeli') }}"><i class="fas fa-history me-2"></i>Riwayat Beli</a></li>
                             <li><a class="dropdown-item" href="{{ route('pelanggan_data.wishlist') }}"><i class="fas fa-heart me-2"></i>Wishlist</a></li>
+                            <li><a class="dropdown-item" href="{{ route('pelanggan_data.retur') }}"><i class="fas fa-undo-alt me-2"></i>Retur & Pengembalian</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form id="logout-form-desktop" action="{{ route('auth.logout_pelanggan') }}" method="POST" class="d-inline">
@@ -253,6 +254,7 @@ $user_logged_in = session()->has('user_logged_in') && session('user_logged_in');
                     <li><a class="nav-item" href="{{ route('pelanggan_data.statusKirim') }}"><i class="fas fa-truck"></i> <span>Pengiriman</span></a></li>
                     <li><a class="nav-item" href="{{ route('pelanggan_data.riwayatBeli') }}"><i class="fas fa-history"></i> <span>Riwayat Beli</span></a></li>
                     <li><a class="nav-item" href="{{ route('pelanggan_data.wishlist') }}"><i class="fas fa-heart"></i> <span>Wishlist</span></a></li>
+                    <li><a class="nav-item" href="{{ route('pelanggan_data.retur') }}"><i class="fas fa-undo-alt"></i> <span>Retur & Pengembalian</span></a></li>
                     <li>
                         <form id="logout-form-mobile" action="{{ route('auth.logout_pelanggan') }}" method="POST" class="d-inline">
                             @csrf

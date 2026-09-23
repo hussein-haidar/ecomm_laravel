@@ -158,6 +158,9 @@
                                                         </a>
                                                     @endif
                                                     @if(in_array($value->status_kirim, ['Sampai tujuan', 'Pesanan diterima']))
+                                                        <a href="{{ route('pelanggan_data.retur') }}" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="Ajukan Retur">
+                                                            <i class="fas fa-undo-alt me-1"></i>Retur
+                                                        </a>
                                                         @if(!in_array($value->id_stok, $id_ulasan_selesai ?? []))
                                                             <button type="button" class="btn btn-sm btn-outline-warning rounded-pill px-3 btn-ulasan" 
                                                                 data-bs-toggle="modal" data-bs-target="#modalUlasan"

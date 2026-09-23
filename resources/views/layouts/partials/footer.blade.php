@@ -64,9 +64,10 @@
                         @if(session('user_logged_in'))
                             <li><a href="{{ route('pelanggan_data.profil') }}"><i class="fas fa-chevron-right me-2"></i>Profil Saya</a></li>
                         @endif
-                        <li><a href="{{ route('pelanggan_data.statusBayar') }}"><i class="fas fa-chevron-right me-2"></i>Status Pembayaran</a></li>
+                        <li><a href="{{ route('pelanggan_data.statusBayar') }}"><i class="fas fa-chevron-right me-2"></i>Menunggu Pembayaran</a></li>
                         <li><a href="{{ route('pelanggan_data.statusKirim') }}"><i class="fas fa-chevron-right me-2"></i>Pelacakan Pengiriman</a></li>
                         <li><a href="{{ route('pelanggan_data.wishlist') }}"><i class="fas fa-heart me-2"></i>Wishlist</a></li>
+                        <li><a href="{{ route('pelanggan_data.retur') }}"><i class="fas fa-undo-alt me-2"></i>Retur & Pengembalian</a></li>
                         <li><a href="#" onclick="window.bukaChat && bukaChat()"><i class="fas fa-comment-dots me-2"></i>Chat Penjual</a></li>
                     </ul>
                 </div>

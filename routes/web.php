@@ -242,6 +242,13 @@ Route::middleware([FilterAdmin::class])->group(function () {
     Route::post('admin_data/verifikasi_ulasan/{id}', [Admin_data::class, 'verifikasi_ulasan'])->name('admin_data.verifikasi_ulasan');
     Route::post('admin_data/tolak_ulasan/{id}', [Admin_data::class, 'tolak_ulasan'])->name('admin_data.tolak_ulasan');
 
+    // Retur / Pengembalian
+    Route::get('admin_data/retur', [Admin_data::class, 'view_retur'])->name('admin_data.view_retur');
+    Route::get('admin_data/retur/detail/{id_retur}', [Admin_data::class, 'detail_retur'])->name('admin_data.detail_retur');
+    Route::post('admin_data/retur/verifikasi/{id_retur}', [Admin_data::class, 'verifikasi_retur'])->name('admin_data.verifikasi_retur');
+    Route::post('admin_data/retur/terima/{id_retur}', [Admin_data::class, 'terima_retur'])->name('admin_data.terima_retur');
+    Route::post('admin_data/retur/selesai/{id_retur}', [Admin_data::class, 'selesaikan_retur'])->name('admin_data.selesaikan_retur');
+
 });
 
 // Rute untuk register (filter berdasarkan level)  
@@ -345,6 +352,13 @@ Route::middleware([FilterPelanggan::class])->group(
         Route::get('pelanggan_data/wishlist', [Pelanggan_data::class, 'wishlist'])->name('pelanggan_data.wishlist');
         Route::post('pelanggan_data/wishlist/add', [Pelanggan_data::class, 'addWishlist'])->name('pelanggan_data.wishlist.add');
         Route::delete('pelanggan_data/wishlist/delete/{id_wishlist}', [Pelanggan_data::class, 'deleteWishlist'])->name('pelanggan_data.wishlist.delete');
+
+        // Retur / Pengembalian
+        Route::get('pelanggan_data/retur', [Pelanggan_data::class, 'retur'])->name('pelanggan_data.retur');
+        Route::get('pelanggan_data/retur/{id_retur}', [Pelanggan_data::class, 'detailRetur'])->name('pelanggan_data.detailRetur');
+        Route::post('pelanggan_data/retur/ajukan', [Pelanggan_data::class, 'ajukanRetur'])->name('pelanggan_data.ajukanRetur');
+        Route::post('pelanggan_data/retur/{id_retur}/kirim', [Pelanggan_data::class, 'kirimRetur'])->name('pelanggan_data.kirimRetur');
+        Route::post('pelanggan_data/retur/{id_retur}/batal', [Pelanggan_data::class, 'batalkanRetur'])->name('pelanggan_data.batalkanRetur');
     }
 );
 

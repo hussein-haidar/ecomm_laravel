@@ -46,7 +46,7 @@ class M_Ekspedisi extends Model
                 'produk.nama_produk',
                 'produk.foto_produk',
                 'produk.harga_produk',
-            'pembelian.*',
+                'pembelian.*',
                 'pembayaran.total_bayar'
             )
             // 🔹 Pertama: JOIN ke pembelian (karena ekspedisi.id_beli → pembelian.id_beli)
@@ -91,10 +91,10 @@ class M_Ekspedisi extends Model
         return DB::table('pembelian')
             ->select(
                 'pembelian.*',
-            'produk.*',
-            'pembayaran.*',
-            'ekspedisi.*',
-            'lacak_pesanan.*',
+                'produk.*',
+                'pembayaran.*',
+                'ekspedisi.*',
+                'lacak_pesanan.*',
                 // tambahkan kolom lain jika perlu
             )
             ->leftJoin('pembayaran', 'pembayaran.id_bayar', '=', 'pembelian.id_bayar')
@@ -181,68 +181,13 @@ class M_Ekspedisi extends Model
 
             $durasiBerlalu = $waktuMulai->diffInHours($now, false);
 
-        // === RECOVERY WAKTU STATUS (versi diperluas) ===
-$recoveryUpdates = [];
-
-// Jika status sudah melewati "Dikemas", tapi waktu_dikemas belum diisi → isi dengan fallback
-$afterPackingStatuses = [
-    'Dikemas', 'Dikirim dari toko', 'Disortir', 'Dikirim dari gudang',
-    'Sampai gudang tujuan', 'Diantar kurir', 'Sampai tujuan', 'Pesanan diterima'
-];
-
-if (in_array($p->status_kirim, $afterPackingStatuses) && empty($p->waktu_dikemas)) {
-    // Prioritas: gunakan waktu_mulai_tahap jika valid, jika tidak, gunakan now()
-    $fallbackTime = $waktuMulai ?? $now;
-    $recoveryUpdates['waktu_dikemas'] = $fallbackTime;
-}
-
-// Recovery untuk status reguler lainnya (seperti sebelumnya, tapi pastikan kondisi benar)
-if ($isReguler) {
-    if (in_array($p->status_kirim, ['Disortir', 'Dikirim dari gudang', 'Sampai gudang tujuan', 'Diantar kurir', 'Sampai tujuan', 'Pesanan diterima']) && empty($p->waktu_dikirim_toko)) {
-        $recoveryUpdates['waktu_dikirim_toko'] = $waktuMulai ?? $now;
-    }
-    if (in_array($p->status_kirim, ['Dikirim dari gudang', 'Sampai gudang tujuan', 'Diantar kurir', 'Sampai tujuan', 'Pesanan diterima']) && empty($p->waktu_disortir)) {
-        $recoveryUpdates['waktu_disortir'] = $waktuMulai ?? $now;
-    }
-    if (in_array($p->status_kirim, ['Sampai gudang tujuan', 'Diantar kurir', 'Sampai tujuan', 'Pesanan diterima']) && empty($p->waktu_dikirim_gudang)) {
-        $recoveryUpdates['waktu_dikirim_gudang'] = $waktuMulai ?? $now;
-    }
-    if (in_array($p->status_kirim, ['Diantar kurir', 'Sampai tujuan', 'Pesanan diterima']) && empty($p->waktu_sampai_gudang_tujuan)) {
-        $recoveryUpdates['waktu_sampai_gudang_tujuan'] = $waktuMulai ?? $now;
-    }
-}
-
-// Recovery umum untuk kurir instan & reguler
-if (in_array($p->status_kirim, ['Diantar kurir', 'Sampai tujuan', 'Pesanan diterima']) && empty($p->waktu_diantar_kurir)) {
-    $recoveryUpdates['waktu_diantar_kurir'] = $waktuMulai ?? $now;
-}
-if (in_array($p->status_kirim, ['Sampai tujuan', 'Pesanan diterima']) && empty($p->waktu_tiba_tujuan)) {
-    $recoveryUpdates['waktu_tiba_tujuan'] = $waktuMulai ?? $now;
-}
-if ($p->status_kirim === 'Pesanan diterima' && empty($p->waktu_pesanan_diterima)) {
-    $recoveryUpdates['waktu_pesanan_diterima'] = $waktuMulai ?? $now;
-}
-
-// Lakukan update jika ada field yang perlu diperbaiki
-if (!empty($recoveryUpdates)) {
-    DB::table('lacak_pesanan')
-        ->where('id_ekspedisi', $p->id_ekspedisi)
-        ->update($recoveryUpdates);
-    $updated = true;
-    
-} // === RECOVERY WAKTU STATUS (versi diperluas) ===
+            // === RECOVERY WAKTU STATUS (versi diperluas) ===
             $recoveryUpdates = [];
 
             // Jika status sudah melewati "Dikemas", tapi waktu_dikemas belum diisi → isi dengan fallback
             $afterPackingStatuses = [
-                'Dikemas',
-                'Dikirim dari toko',
-                'Disortir',
-                'Dikirim dari gudang',
-                'Sampai gudang tujuan',
-                'Diantar kurir',
-                'Sampai tujuan',
-                'Pesanan diterima'
+                'Dikemas', 'Dikirim dari toko', 'Disortir', 'Dikirim dari gudang',
+                'Sampai gudang tujuan', 'Diantar kurir', 'Sampai tujuan', 'Pesanan diterima'
             ];
 
             if (in_array($p->status_kirim, $afterPackingStatuses) && empty($p->waktu_dikemas)) {
@@ -526,7 +471,7 @@ if (!empty($recoveryUpdates)) {
                 'pembelian.*',
                 'pembayaran.*',
                 'ekspedisi.*',
-            'lacak_pesanan.*',
+                'lacak_pesanan.*',
                 'pelanggan.*',
                 'website.*',
             )

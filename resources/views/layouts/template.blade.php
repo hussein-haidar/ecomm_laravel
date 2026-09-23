@@ -525,6 +525,21 @@
                             </a>
                         </li>
 
+                        <li class="header">RETURN NAVIGATION</li>
+                        <li>
+                            <a href="{{ route('admin_data.view_retur') }}">
+                                <i class="fa fa-undo"></i> <span>Retur & Pengembalian</span>
+                                @php
+                                    $jumlahRetur = \App\Models\M_Retur::countReturAktif(session()->get('sesi_user'));
+                                @endphp
+                                @if ($jumlahRetur > 0)
+                                    <span class="pull-right-container">
+                                        <span class="label label-warning pull-right">{{ $jumlahRetur }}</span>
+                                    </span>
+                                @endif
+                            </a>
+                        </li>
+
                         <li class="header">BENEFIT NAVIGATION</li>
                         <li class="treeview">
                             <a href="#">
