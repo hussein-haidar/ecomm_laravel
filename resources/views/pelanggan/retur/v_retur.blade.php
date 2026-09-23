@@ -176,12 +176,23 @@
                                     data-produk="{{ $pb->nama_produk }}"
                                     data-jumlah="{{ $pb->jumlah_produk }}"
                                     data-satuan="{{ $pb->satuan_produk }}"
-                                    data-ukuran="{{ $pb->ukuran_produk }}">
+                                    data-ukuran="{{ $pb->ukuran_produk }}"
+                                    data-boleh-retur="{{ isset($pb->boleh_retur) ? (int) $pb->boleh_retur : 1 }}">
                                     #{{ $pb->id_beli }} — {{ $pb->nama_produk }} ({{ $pb->jumlah_produk }} {{ $pb->satuan_produk }})
+                                    @if(isset($pb->boleh_retur) && (int) $pb->boleh_retur === 0)
+                                        <span class="text-danger">— retur dibatasi</span>
+                                    @endif
                                 </option>
                             @endforeach
                         </select>
-                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Pesanan yang ditampilkan sudah berstatus "Sampai tujuan" atau "Pesanan diterima" dan belum pernah diretur.</div>
+                        <div class="form-text"><i class="fas fa-info-circle me-1"></i>Pesanan yang ditampilkan sudah berstatus "Sampai tujuan" atau "Pesanan diterima", belum pernah diretur, dan masih dalam batas 2 x 24 jam sejak diterima.</div>
+                    </div>
+
+                    <div class="alert alert-warning d-none" id="boleh_retur_warning" role="alert">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Produk ini termasuk kategori yang <strong>tidak dapat diretur</strong> (custom/personalisasi, higiene,
+                        digital/voucher, atau promo/flash sale). Retur hanya dapat diajukan jika produk <strong>rusak/cacat</strong>
+                        atau <strong>barang salah/keliru</strong>.
                     </div>
 
                     <div class="row g-3">
@@ -247,11 +258,37 @@
     document.addEventListener('DOMContentLoaded', function() {
         const select = document.getElementById('retur_id_beli');
         if (select) {
+            const alasanSelect = document.querySelector('select[name="jenis_alasan"]');
+            const warning = document.getElementById('boleh_retur_warning');
+
             const update = () => {
                 const opt = select.options[select.selectedIndex];
                 document.getElementById('r_produk').textContent = opt.dataset.produk || '-';
                 document.getElementById('r_jumlah').textContent = opt.dataset.jumlah ? opt.dataset.jumlah + ' ' + (opt.dataset.satuan || 'pcs') : '-';
                 document.getElementById('r_ukuran').textContent = opt.dataset.ukuran || '-';
+
+                const bolehRetur = parseInt(opt.dataset.bolehRetur || '1', 10);
+                const dibatasi = opt.value && bolehRetur === 0;
+                if (warning && alasanSelect) {
+                    warning.classList.toggle('d-none', !dibatasi);
+                    if (dibatasi) {
+                        // Produk dibatasi retur: hanya boleh alasan rusak/cacat atau salah/keliru
+                        Array.from(alasanSelect.options).forEach(function(o) {
+                            const izinkan = (o.value === 'Produk rusak/cacat' || o.value === 'Barang salah/keliru');
+                            o.disabled = !izinkan;
+                            if (!izinkan && o.selected) {
+                                alasanSelect.value = 'Produk rusak/cacat';
+                            }
+                        });
+                        if (!alasanSelect.value || alasanSelect.selectedOptions[0].disabled) {
+                            alasanSelect.value = 'Produk rusak/cacat';
+                        }
+                    } else {
+                        Array.from(alasanSelect.options).forEach(function(o) {
+                            o.disabled = false;
+                        });
+                    }
+                }
             };
             select.addEventListener('change', update);
             update();

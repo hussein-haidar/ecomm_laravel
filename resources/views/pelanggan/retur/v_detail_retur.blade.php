@@ -102,6 +102,18 @@
                                     <div class="fw-semibold">{{ $retur->jenis_alasan }}</div>
                                 </div>
                                 <div class="col-md-6">
+                                    <div class="text-muted">Penanggung Biaya Retur</div>
+                                    @if($retur->penanggung_biaya)
+                                        @if($retur->penanggung_biaya == 'Toko')
+                                            <div class="fw-semibold text-danger">Toko <small>(kesalahan toko/ekspedisi)</small></div>
+                                        @else
+                                            <div class="fw-semibold text-warning">Pembeli <small>(alasan pribadi)</small></div>
+                                        @endif
+                                    @else
+                                        <div class="fw-semibold">-</div>
+                                    @endif
+                                </div>
+                                <div class="col-md-6">
                                     <div class="text-muted">Tanggal Pengajuan</div>
                                     <div class="fw-semibold">{{ \Carbon\Carbon::parse($retur->waktu_pengajuan)->format('d M Y H:i') }}</div>
                                 </div>

@@ -97,6 +97,17 @@
                         </select>
                     </div>
 
+                    <div class="form-group">
+                        <label>Kebijakan Retur (S&K)</label><br>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" name="boleh_retur" value="1" {{ $data_stok->boleh_retur ? 'checked' : '' }}>
+                            Produk boleh diretur
+                        </label>
+                        <small class="help-block">Kosongkan (tidak dicentang) jika produk tidak boleh diretur
+                            (custom/personalisasi, higiene, digital/voucher, promo/flash sale) kecuali rusak/cacat
+                            atau salah/keliru.</small>
+                    </div>
+
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-success">Simpan</button>
                         <a href="{{ route('admin_data.stok') }}" class="btn btn-primary">Kembali</a>

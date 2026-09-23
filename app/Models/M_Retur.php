@@ -28,6 +28,7 @@ class M_Retur extends Model
         'jumlah_produk',
         'satuan_produk',
         'jenis_alasan',
+        'penanggung_biaya',
         'alasan',
         'tipe_retur',
         'foto_bukti',
@@ -85,7 +86,8 @@ class M_Retur extends Model
         return $query->paginate(10);
     }
 
-    // Ambil pembelian yang berhak diajukan retur (sudah sampai tujuan / diterima, belum pernah retur)
+    // Ambil pembelian yang berhak diajukan retur (sudah sampai tujuan / diterima, belum pernah retur,
+    // masih dalam batas waktu 2x24 jam sesuai S&K)
     public static function getPembelianEligibleRetur($idPelanggan)
     {
         $idSudahRetur = DB::table('retur')
@@ -93,20 +95,38 @@ class M_Retur extends Model
             ->pluck('id_beli')
             ->toArray();
 
+        $batasWaktu = now()->subHours(48);
+
         return DB::table('pembelian')
             ->select(
                 'pembelian.*',
                 'produk.foto_produk',
                 'produk.nama_produk',
                 'ekspedisi.status_kirim',
-                'ekspedisi.id_ekspedisi'
+                'ekspedisi.id_ekspedisi',
+                'lacak.waktu_pesanan_diterima',
+                'stok.boleh_retur'
             )
             ->leftJoin('produk', 'produk.nama_produk', '=', 'pembelian.nama_produk')
             ->leftJoin('ekspedisi', 'ekspedisi.id_beli', '=', 'pembelian.id_beli')
+            ->leftJoin('lacak_pesanan as lacak', 'lacak.id_ekspedisi', '=', 'ekspedisi.id_ekspedisi')
+            ->leftJoin('stok_produk as stok', 'stok.id_stok', '=', 'pembelian.id_stok')
             ->where('pembelian.id_pelanggan', $idPelanggan)
             ->where('pembelian.status_beli', 'Dibayar')
             ->whereIn('ekspedisi.status_kirim', ['Sampai tujuan', 'Pesanan diterima'])
             ->when($idSudahRetur, fn ($q) => $q->whereNotIn('pembelian.id_beli', $idSudahRetur))
+            // Batas waktu retur 2x24 jam berdasarkan waktu pesanan diterima (fallback: waktu mulai tahap)
+            ->where(function ($q) use ($batasWaktu) {
+                $q->where('lacak.waktu_pesanan_diterima', '>=', $batasWaktu)
+                    ->orWhere(function ($sub) use ($batasWaktu) {
+                        $sub->whereNull('lacak.waktu_pesanan_diterima')
+                            ->where('ekspedisi.waktu_mulai_tahap', '>=', $batasWaktu);
+                    })
+                    ->orWhere(function ($sub) use ($batasWaktu) {
+                        $sub->whereNull('lacak.waktu_pesanan_diterima')
+                            ->whereNull('ekspedisi.waktu_mulai_tahap');
+                    });
+            })
             ->orderByDesc('pembelian.id_beli')
             ->get();
     }
@@ -158,6 +178,29 @@ class M_Retur extends Model
         return $query->paginate(10);
     }
 
+    // Ambil harga & flag boleh_retur stok untuk validasi retur
+    public static function getStokReturInfo($idStok)
+    {
+        return DB::table('stok_produk')
+            ->where('id_stok', $idStok)
+            ->first();
+    }
+
+    // Penanggung biaya retur berdasarkan penyebab (S&K):
+    // - Kesalahan toko/ekspedisi (rusak, salah/keliru, tidak sesuai, tidak lengkap) => Toko
+    // - Alasan pribadi (tidak suka, salah pilih, dll) => Pembeli
+    public static function penanggungBiayaByAlasan($jenisAlasan)
+    {
+        $alasanToko = [
+            'Produk rusak/cacat',
+            'Barang salah/keliru',
+            'Tidak sesuai deskripsi',
+            'Barang tidak lengkap',
+        ];
+
+        return in_array($jenisAlasan, $alasanToko) ? 'Toko' : 'Pembeli';
+    }
+
     // Hitung retur aktif per toko
     public static function countReturAktif($sesiUser)
     {
@@ -177,13 +220,18 @@ class M_Retur extends Model
                 . ' (' . ($retur->status_refund ?: 'Belum Diproses') . ').';
         }
 
+        // Info penanggung biaya retur sesuai S&K
+        $penanggungInfo = $retur->penanggung_biaya
+            ? " Biaya retur ditanggung oleh {$retur->penanggung_biaya}."
+            : '';
+
         // Notifikasi in-app untuk pelanggan
         try {
             M_Notifikasi::kirim([
                 'id_pelanggan' => $retur->id_pelanggan,
                 'nama_pelanggan' => $retur->nama_pelanggan,
                 'judul' => 'Retur Selesai',
-                'pesan' => "Retur {$kode} telah selesai diproses." . $refundInfo,
+                'pesan' => "Retur {$kode} telah selesai diproses." . $refundInfo . $penanggungInfo,
                 'tipe' => 'sukses',
                 'link' => route('pelanggan_data.detailRetur', $retur->id_retur),
             ]);
@@ -200,7 +248,7 @@ class M_Retur extends Model
             try {
                 Mail::raw(
                     "Halo {$retur->nama_pelanggan},\n\n"
-                    . "Retur {$kode} untuk produk \"{$retur->nama_produk}\" telah selesai diproses." . $refundInfo . "\n\n"
+                    . "Retur {$kode} untuk produk \"{$retur->nama_produk}\" telah selesai diproses." . $refundInfo . $penanggungInfo . "\n\n"
                     . "Terima kasih telah berbelanja di toko kami.",
                     function ($message) use ($emailPelanggan, $kode) {
                         $message->to($emailPelanggan)

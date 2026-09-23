@@ -2662,13 +2662,21 @@ class Pelanggan_data extends WebsiteController
             ->pluck('id_beli')
             ->toArray();
 
+        $batasWaktu = now()->subHours(48);
+
         $pembelian = DB::table('pembelian')
             ->leftJoin('ekspedisi', 'ekspedisi.id_beli', '=', 'pembelian.id_beli')
             ->leftJoin('pembayaran', 'pembayaran.id_bayar', '=', 'pembelian.id_bayar')
+            ->leftJoin('lacak_pesanan as lacak', 'lacak.id_ekspedisi', '=', 'ekspedisi.id_ekspedisi')
+            ->leftJoin('stok_produk as stok', 'stok.id_stok', '=', 'pembelian.id_stok')
             ->select(
                 'pembelian.*',
+                'pembelian.id_stok as pembelian_id_stok',
                 'ekspedisi.id_bayar as ekspedisi_id_bayar',
-                'pembayaran.sesi_user as bayar_sesi_user'
+                'ekspedisi.waktu_mulai_tahap',
+                'lacak.waktu_pesanan_diterima',
+                'pembayaran.sesi_user as bayar_sesi_user',
+                'stok.boleh_retur'
             )
             ->where('pembelian.id_beli', $request->id_beli)
             ->where('pembelian.id_pelanggan', $idPelanggan)
@@ -2679,6 +2687,22 @@ class Pelanggan_data extends WebsiteController
 
         if (!$pembelian) {
             Session::flash('error', 'Pesanan tidak dapat diretur. Pastikan pesanan sudah sampai tujuan dan belum pernah diajukan retur.');
+            return redirect()->route('pelanggan_data.retur');
+        }
+
+        // S&K: batas waktu retur 2x24 jam sejak pesanan diterima
+        $waktuTerima = $pembelian->waktu_pesanan_diterima ?? $pembelian->waktu_mulai_tahap;
+        if ($waktuTerima && Carbon::parse($waktuTerima)->lt($batasWaktu)) {
+            Session::flash('error', 'Batas waktu pengajuan retur adalah 2 x 24 jam sejak pesanan diterima.');
+            return redirect()->route('pelanggan_data.retur');
+        }
+
+        // S&K: produk yang ditandai tidak boleh retur (custom/higiene/digital/voucher/flash sale)
+        // hanya boleh diretur jika rusak/cacat atau barang salah/keliru.
+        $bolehRetur = $pembelian->boleh_retur ?? 1;
+        $alasanTidakBolehRetur = ['Produk rusak/cacat', 'Barang salah/keliru'];
+        if ((int) $bolehRetur === 0 && !in_array($request->jenis_alasan, $alasanTidakBolehRetur)) {
+            Session::flash('error', 'Produk ini tidak dapat diretur kecuali produk rusak/cacat atau salah/keliru.');
             return redirect()->route('pelanggan_data.retur');
         }
 
@@ -2710,6 +2734,7 @@ class Pelanggan_data extends WebsiteController
             'jumlah_produk' => $pembelian->jumlah_produk,
             'satuan_produk' => $pembelian->satuan_produk,
             'jenis_alasan' => $request->jenis_alasan,
+            'penanggung_biaya' => M_Retur::penanggungBiayaByAlasan($request->jenis_alasan),
             'alasan' => $request->alasan,
             'tipe_retur' => $request->tipe_retur,
             'foto_bukti' => $fotoBukti,

@@ -247,6 +247,9 @@ class Admin_data extends Controller
 
         $data['tanggal_masuk_produk'] = now();
 
+        // S&K retur: flag boleh diretur (checkbox, default 1 = boleh)
+        $data['boleh_retur'] = $request->has('boleh_retur') ? 1 : 0;
+
         // Simpan data
         (new M_Stok())->add($data);
 
@@ -309,6 +312,9 @@ class Admin_data extends Controller
 
         // Tambahkan field tambahan
         $data['harga_produk'] = $harga_produk;
+
+        // S&K retur: flag boleh diretur (checkbox, default 1 = boleh)
+        $data['boleh_retur'] = $request->has('boleh_retur') ? 1 : 0;
 
         // Panggil fungsi updateData dari model
         try {

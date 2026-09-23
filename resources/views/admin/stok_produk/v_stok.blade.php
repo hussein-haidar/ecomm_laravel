@@ -34,6 +34,7 @@
                             <th>Ukuran Produk</th>
                             <th>Total Harga Produk</th>
                             <th>Total Berat Produk</th>
+                            <th>Kebijakan Retur</th>
                             <th scope="col" width="auto">Aksi</th>
                         </tr>
                     </thead>
@@ -89,6 +90,13 @@
 
                                 <td>Rp. {{ number_format($value->total_harga, 0, ',', '.') }}</td>
                                 <td>{{ $value->total_berat }} {{ $value->satuan_berat }}</td>
+                                <td>
+                                    @if (!empty($value->boleh_retur) && (int) $value->boleh_retur === 1)
+                                        <span class="badge bg-green">Boleh Retur</span>
+                                    @else
+                                        <span class="badge bg-red">Tidak Boleh Retur</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <a href="{{ url('admin_data/edit_stok/' . $value->id_stok) }}"
                                         class="btn btn-xs btn-warning">

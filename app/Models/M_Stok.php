@@ -27,6 +27,7 @@ class M_Stok extends Model
         'satuan_berat',
         'total_harga',
         'total_berat',
+        'boleh_retur',
     ];
 
     // Jika tidak menggunakan timestamps, matikan pengelolaan timestamps otomatis  

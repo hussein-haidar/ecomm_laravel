@@ -60,6 +60,20 @@
                                 <td>: {{ $retur->jenis_alasan }}</td>
                             </tr>
                             <tr>
+                                <th>Penanggung Biaya Retur</th>
+                                <td>:
+                                    @if($retur->penanggung_biaya)
+                                        @if($retur->penanggung_biaya == 'Toko')
+                                            <span class="label label-danger">Toko (kesalahan toko/ekspedisi)</span>
+                                        @else
+                                            <span class="label label-warning">Pembeli (alasan pribadi)</span>
+                                        @endif
+                                    @else
+                                        -
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Alasan</th>
                                 <td>: {{ $retur->alasan }}</td>
                             </tr>
