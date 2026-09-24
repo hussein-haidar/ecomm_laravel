@@ -5,9 +5,11 @@
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
+                const hash = this.getAttribute('href');
+                if (hash.length <= 1) return;
+                const target = document.querySelector(hash);
                 if (target) {
+                    e.preventDefault();
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
@@ -272,9 +274,11 @@
 
     categoryButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            categoryButtons.forEach(b => b.classList.remove('active'));
-            b.classList.remove('btn-primary');
-            b.classList.add('btn-outline-primary');
+            categoryButtons.forEach(button => {
+                button.classList.remove('active');
+                button.classList.remove('btn-primary');
+                button.classList.add('btn-outline-primary');
+            });
             this.classList.add('active');
             this.classList.remove('btn-outline-primary');
             this.classList.add('btn-primary');

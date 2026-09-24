@@ -1274,9 +1274,6 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Cache busting - Updated: 2025-03-22 */
-@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap");
-
 /* Breadcrumb styling */
 .breadcrumb {
   background: transparent;

@@ -216,6 +216,12 @@ $user_logged_in = session()->has('user_logged_in') && session('user_logged_in');
                             <span>Katalog Produk</span>
                         </a>
                     </li>
+                    <li>
+                        <a class="nav-item" href="#" onclick="openFilterSheet(event)">
+                            <i class="fas fa-filter"></i>
+                            <span>Filter Produk</span>
+                        </a>
+                    </li>
                     <li class="dropdown-trigger" data-dropdown="mobileKategori" aria-expanded="false">
                         <a class="nav-item" href="#" role="button">
                             <i class="fas fa-box-open"></i>
