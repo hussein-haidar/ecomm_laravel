@@ -65,11 +65,11 @@
                     @foreach($items as $index => $faq)
                         <div class="accordion-item faq-item" data-category="{{ $category }}" data-aos="fade-up" data-aos-delay="{{ ($loop->index * 30) }}">
                             <h2 class="accordion-header" id="heading{{ ucfirst($category) }}{{ $index + 1 }}">
-                                <button class="accordion-button {{ $loop->first && $category === 'pemesanan' ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ ucfirst($category) }}{{ $index + 1 }}" aria-expanded="{{ $loop->first && $category === 'pemesanan' ? 'true' : 'false' }}" aria-controls="collapse{{ ucfirst($category) }}{{ $index + 1 }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ ucfirst($category) }}{{ $index + 1 }}" aria-expanded="false" aria-controls="collapse{{ ucfirst($category) }}{{ $index + 1 }}">
                                     {{ $faq->pertanyaan }}
                                 </button>
                             </h2>
-                            <div id="collapse{{ ucfirst($category) }}{{ $index + 1 }}" class="accordion-collapse collapse {{ $loop->first && $category === 'pemesanan' ? 'show' : '' }}" aria-labelledby="heading{{ ucfirst($category) }}{{ $index + 1 }}" data-bs-parent="#faqAccordion">
+                            <div id="collapse{{ ucfirst($category) }}{{ $index + 1 }}" class="accordion-collapse collapse" aria-labelledby="heading{{ ucfirst($category) }}{{ $index + 1 }}" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
                                     {!! $faq->jawaban !!}
                                 </div>
