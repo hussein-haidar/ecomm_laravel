@@ -310,17 +310,6 @@ class Superadmin_data extends Controller
         return redirect()->route('superadmin_data.bank')->with('success', 'Bank deleted successfully.');
     }
 
-    // Fungsi delete untuk soft delete produk
-    public function data_dihapus_bank()
-    {
-        $data = [
-            'title' => 'Data Bank Dihapus',
-            'title2' => 'Data Bank Dihapus',
-            'data_bank_dihapus' => $this->M_Bank->get_bank_dihapus(), // Ambil data produk yang sudah dihapus
-        ];
-        return view('superadmin.v_data_dihapus', $data);
-    }
-
     public function restore_bank($id_bank)
     {
         // Restore produk yang telah dihapus dengan SoftDelete  
