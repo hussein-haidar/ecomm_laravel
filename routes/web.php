@@ -12,6 +12,7 @@ use App\Http\Controllers\Pemilik_data;
 use App\Http\Controllers\Admin_data;
 use App\Http\Controllers\Admin_laporan_mingguan;
 use App\Http\Controllers\Admin_laporan_bulanan;
+use App\Http\Controllers\Konten_data;
 use App\Http\Controllers\Pelanggan_data;
 use App\Http\Middleware\FilterSuperadmin;
 use App\Http\Middleware\FilterPemilik;
@@ -104,6 +105,22 @@ Route::middleware([FilterSuperAdmin::class])->group(function () {
 
     Route::get('superadmin_data/backup_db', [superadmin_data::class, 'backup_db'])->name('superadmin_data.backup_db');
     Route::post('superadmin_data/proses_db', [superadmin_data::class, 'proses_db'])->name('superadmin_data.proses_db');
+
+    // Konten: Template FAQ (superadmin)
+    Route::get('superadmin_data/tpl_faq', [Konten_data::class, 'index_faq'])->name('superadmin_data.tpl_faq.index');
+    Route::get('superadmin_data/tpl_faq/add', [Konten_data::class, 'add_faq'])->name('superadmin_data.tpl_faq.add');
+    Route::post('superadmin_data/tpl_faq/save', [Konten_data::class, 'save_faq'])->name('superadmin_data.tpl_faq.save');
+    Route::get('superadmin_data/tpl_faq/edit/{id}', [Konten_data::class, 'edit_faq'])->name('superadmin_data.tpl_faq.edit');
+    Route::post('superadmin_data/tpl_faq/update/{id}', [Konten_data::class, 'update_faq'])->name('superadmin_data.tpl_faq.update');
+    Route::delete('superadmin_data/tpl_faq/delete/{id}', [Konten_data::class, 'delete_faq'])->name('superadmin_data.tpl_faq.delete');
+
+    // Konten: Template Syarat & Ketentuan (superadmin)
+    Route::get('superadmin_data/tpl_syaket', [Konten_data::class, 'index_syaket'])->name('superadmin_data.tpl_syaket.index');
+    Route::get('superadmin_data/tpl_syaket/add', [Konten_data::class, 'add_syaket'])->name('superadmin_data.tpl_syaket.add');
+    Route::post('superadmin_data/tpl_syaket/save', [Konten_data::class, 'save_syaket'])->name('superadmin_data.tpl_syaket.save');
+    Route::get('superadmin_data/tpl_syaket/edit/{id}', [Konten_data::class, 'edit_syaket'])->name('superadmin_data.tpl_syaket.edit');
+    Route::post('superadmin_data/tpl_syaket/update/{id}', [Konten_data::class, 'update_syaket'])->name('superadmin_data.tpl_syaket.update');
+    Route::delete('superadmin_data/tpl_syaket/delete/{id}', [Konten_data::class, 'delete_syaket'])->name('superadmin_data.tpl_syaket.delete');
 });
 
 // Rute untuk pemilik (filter berdasarkan level)  
@@ -192,6 +209,22 @@ Route::middleware([FilterPemilik::class])->group(function () {
     Route::post('pemilik_data/retur/terima/{id_retur}', [Pemilik_data::class, 'terima_retur'])->name('pemilik_data.terima_retur');
     Route::post('pemilik_data/retur/selesai/{id_retur}', [Pemilik_data::class, 'selesaikan_retur'])->name('pemilik_data.selesaikan_retur');
 
+    // Konten: FAQ toko (pemilik)
+    Route::get('pemilik_data/faq', [Konten_data::class, 'index_faq'])->name('pemilik_data.faq.index');
+    Route::get('pemilik_data/faq/add', [Konten_data::class, 'add_faq'])->name('pemilik_data.faq.add');
+    Route::post('pemilik_data/faq/save', [Konten_data::class, 'save_faq'])->name('pemilik_data.faq.save');
+    Route::get('pemilik_data/faq/edit/{id}', [Konten_data::class, 'edit_faq'])->name('pemilik_data.faq.edit');
+    Route::post('pemilik_data/faq/update/{id}', [Konten_data::class, 'update_faq'])->name('pemilik_data.faq.update');
+    Route::delete('pemilik_data/faq/delete/{id}', [Konten_data::class, 'delete_faq'])->name('pemilik_data.faq.delete');
+
+    // Konten: Syarat & Ketentuan toko (pemilik)
+    Route::get('pemilik_data/syaket', [Konten_data::class, 'index_syaket'])->name('pemilik_data.syaket.index');
+    Route::get('pemilik_data/syaket/add', [Konten_data::class, 'add_syaket'])->name('pemilik_data.syaket.add');
+    Route::post('pemilik_data/syaket/save', [Konten_data::class, 'save_syaket'])->name('pemilik_data.syaket.save');
+    Route::get('pemilik_data/syaket/edit/{id}', [Konten_data::class, 'edit_syaket'])->name('pemilik_data.syaket.edit');
+    Route::post('pemilik_data/syaket/update/{id}', [Konten_data::class, 'update_syaket'])->name('pemilik_data.syaket.update');
+    Route::delete('pemilik_data/syaket/delete/{id}', [Konten_data::class, 'delete_syaket'])->name('pemilik_data.syaket.delete');
+
 
 });
 
@@ -255,6 +288,22 @@ Route::middleware([FilterAdmin::class])->group(function () {
     Route::post('admin_data/retur/verifikasi/{id_retur}', [Admin_data::class, 'verifikasi_retur'])->name('admin_data.verifikasi_retur');
     Route::post('admin_data/retur/terima/{id_retur}', [Admin_data::class, 'terima_retur'])->name('admin_data.terima_retur');
     Route::post('admin_data/retur/selesai/{id_retur}', [Admin_data::class, 'selesaikan_retur'])->name('admin_data.selesaikan_retur');
+
+    // Konten: FAQ toko (admin)
+    Route::get('admin_data/faq', [Konten_data::class, 'index_faq'])->name('admin_data.faq.index');
+    Route::get('admin_data/faq/add', [Konten_data::class, 'add_faq'])->name('admin_data.faq.add');
+    Route::post('admin_data/faq/save', [Konten_data::class, 'save_faq'])->name('admin_data.faq.save');
+    Route::get('admin_data/faq/edit/{id}', [Konten_data::class, 'edit_faq'])->name('admin_data.faq.edit');
+    Route::post('admin_data/faq/update/{id}', [Konten_data::class, 'update_faq'])->name('admin_data.faq.update');
+    Route::delete('admin_data/faq/delete/{id}', [Konten_data::class, 'delete_faq'])->name('admin_data.faq.delete');
+
+    // Konten: Syarat & Ketentuan toko (admin)
+    Route::get('admin_data/syaket', [Konten_data::class, 'index_syaket'])->name('admin_data.syaket.index');
+    Route::get('admin_data/syaket/add', [Konten_data::class, 'add_syaket'])->name('admin_data.syaket.add');
+    Route::post('admin_data/syaket/save', [Konten_data::class, 'save_syaket'])->name('admin_data.syaket.save');
+    Route::get('admin_data/syaket/edit/{id}', [Konten_data::class, 'edit_syaket'])->name('admin_data.syaket.edit');
+    Route::post('admin_data/syaket/update/{id}', [Konten_data::class, 'update_syaket'])->name('admin_data.syaket.update');
+    Route::delete('admin_data/syaket/delete/{id}', [Konten_data::class, 'delete_syaket'])->name('admin_data.syaket.delete');
 
 });
 

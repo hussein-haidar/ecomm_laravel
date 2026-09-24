@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -61,147 +61,17 @@
 
             {{-- FAQ Accordion --}}
             <div class="accordion accordion-flush" id="faqAccordion">
-                {{-- PESANAN --}}
-                @php
-                    $faqs = [
-                        'pemesanan' => [
-                            [
-                                'q' => 'Bagaimana cara melakukan pemesanan?',
-                                'a' => '1) Pilih produk yang diinginkan di halaman Katalog atau Toko.<br>
-                                      2) Pilih ukuran (jika ada) dan jumlah, lalu klik "Tambah ke Keranjang".<br>
-                                      3) Buka Keranjang (ikon keranjang di navbar), centang produk, klik "Checkout".<br>
-                                      4) Isi alamat pengiriman, pilih ekspedisi & metode pembayaran.<br>
-                                      5) Klik "Buat Pesanan" lalu lakukan pembayaran sesuai instruksi.',
-                            ],
-                            [
-                                'q' => 'Apakah saya harus login untuk memesan?',
-                                'a' => 'Ya. Anda harus mendaftar & login untuk checkout, melihat riwayat, melacak pengiriman, dan mengelola profil. Login juga memungkinkan fitur Chat Penjual & Wishlist.',
-                            ],
-                            [
-                                'q' => 'Bisa ganti alamat/ukuran setelah pesanan dibuat?',
-                                'a' => 'Tidak bisa diubah lewat sistem setelah checkout. Segera hubungi toko via <strong>Chat Penjual</strong> (di halaman Detail Produk / Keranjang / Riwayat) sebelum status berubah jadi "Dikemas/Dikirim".',
-                            ],
-                            [
-                                'q' => 'Produk yang saya inginkan stoknya habis. Bisa notif kalau stok masuk?',
-                                'a' => 'Fitur notif stok belum tersedia. Saran: cek berkala atau chat penjual via tombol <strong>Chat Penjual</strong> di halaman produk untuk tanya kapan restock.',
-                            ],
-                        ],
-                        'pembayaran' => [
-                            [
-                                'q' => 'Metode pembayaran apa saja yang tersedia?',
-                                'a' => '<strong>Via Midtrans Payment Gateway:</strong><br>
-                                      • Virtual Account (BCA, BRI, BNI, Mandiri, Permata, CIMB, dll)<br>
-                                      • E-Wallet (GoPay, ShopeePay, Dana, OVO, LinkAja, Sakuku)<br>
-                                      • Retail/Minimarket (Alfamart, Indomaret via VA)<br>
-                                      • Kartu Kredit/Debit (Visa, Mastercard, JCB)<br>
-                                      • QRIS<br><br>
-                                      <strong>Manual Transfer:</strong> Rekening toko (BCA/BRI/Mandiri) - bukti bayar wajib diupload.<br>
-                                      <strong>COD:</strong> Bayar di tempat (area & nominal terbatas).',
-                            ],
-                            [
-                                'q' => 'Berapa batas waktu pembayaran?',
-                                'a' => '<strong>Midtrans (VA/E-Wallet/QRIS/Kartu):</strong> Ada timer real-time (biasanya 15-24 jam).<br>
-                                      <strong>Transfer Manual:</strong> 10 menit setelah checkout (timer di halaman Status Bayar).<br>
-                                      <strong>COD:</strong> Bayar saat kurir sampai.',
-                            ],
-                            [
-                                'q' => 'Sudah bayar tapi status belum berubah jadi "Dibayar".',
-                                'a' => '<strong>Midtrans:</strong> Biasanya otomatis < 5 menit. Jika > 1 jam, cek email Midtrans/notif WhatsApp.<br>
-                                      <strong>Transfer Manual:</strong> Admin verifikasi manual (jam kerja 08-22 WIB). Pastikan bukti JPG/PNG < 2MB, nominal & nomor rekening terlihat jelas.<br>
-                                      <strong>COD:</strong> Status update setelah kurir konfirmasi pembayaran.',
-                            ],
-                            [
-                                'q' => 'Bisa bayar cicilan?',
-                                'a' => 'Ya, via Midtrans dengan Kartu Kredit (biasanya 3/6/12 bln) atau Akulata/Kredivo (pilih di halaman pembayaran Midtrans). Syarat & bunga mengikuti kebijakan masing-masing penyedia.',
-                            ],
-                        ],
-                        'pengiriman' => [
-                            [
-                                'q' => 'Berapa lama estimasi pengiriman?',
-                                'a' => 'Tergantung asal toko & kota tujuan:<br>
-                                      • <strong>Jawa & Bali:</strong> 1-3 hari kerja<br>
-                                      • <strong>Sumatra:</strong> 2-4 hari kerja<br>
-                                      • <strong>Kalimantan/Sulawesi/NTB/NTT:</strong> 3-6 hari kerja<br>
-                                      • <strong>Papua/Maluku:</strong> 5-10 hari kerja<br><br>
-                                      <em>Estimasi ini tidak mengikat & tidak termasuk hari libur/force majeure.</em>',
-                            ],
-                            [
-                                'q' => 'Cara cek nomor resi & tracking?',
-                                'a' => '1) Buka menu <strong>Pengiriman</strong> di navbar (ikon truk).<br>
-                                      2) Klik "Lacak" pada pesanan.<br>
-                                      3) Atau klik link WhatsApp/Email notif pengiriman.<br>
-                                      Nomor resi juga terlihat di detail pesanan (menu Riwayat Beli).',
-                            ],
-                            [
-                                'q' => 'Paket tertulis "Diterima" tapi saya belum terima.',
-                                'a' => '1) Cek ke tetangga/RT/security/lokasi penitipan kurir.<br>
-                                      2) Tanya ke kurir via nomor telepon di detail tracking.<br>
-                                      3) Jika 1x24 jam tidak ketemu: hubungi kami via Chat/WA dengan nomor resi & bukti tidak terima (foto CCTV/skck RT). Kami akan klaim ke ekspedisi.',
-                            ],
-                            [
-                                'q' => 'Bisa ganti alamat pengiriman setelah dikirim?',
-                                'a' => 'Tidak bisa via sistem. Hubungi <strong>langsung kurir</strong> via nomor telepon di tracking. Beberapa ekspedisi izinkan ganti alamat (bisa ada biaya tambahan).',
-                            ],
-                        ],
-                        'retur' => [
-                            [
-                                'q' => 'Syarat retur/produk diganti?',
-                                'a' => '<strong>Diterima jika:</strong> Rusak/pecah, cacat pabrik, salah kirim (warna/ukuran/model), kedaluwarsa.<br>
-                                      <strong>Batas waktu:</strong> Maksimal <strong>2 hari</strong> setelah terima (berdasarkan bukti terima ekspedisi).<br>
-                                      <strong>Kondisi:</strong> Asli, tidak dipakai, tag/packaging utuh, lengkap aksesoris.',
-                            ],
-                            [
-                                'q' => 'Cara ajukan retur?',
-                                'a' => '1) Foto/video bukti kerusakan/ketidaksesuaian (wajib jelas).<br>
-                                      2) Buka menu <strong>Pengiriman</strong> → Klik "Ajukan Retur" pada pesanan.<br>
-                                      3) Atau Chat Penjual langsung dari halaman Detail Produk/Riwayat.<br>
-                                      4) Tunggu verifikasi (max 1x24 jam) → Dapatkan instruksi & alamat pengembalian.',
-                            ],
-                            [
-                                'q' => 'Siapa bayar ongkir retur?',
-                                'a' => '<strong>Kesalahan toko/ekspedisi</strong> (rusak, salah kirim, cacat): <strong>Toko bayar</strong> (kita kirim label return/transfer ongkir).<br>
-                                      <strong>Alasan pribadi</strong> (salah pilih, tidak suka, ukuran tidak pas): <strong>Pembeli bayar</strong> ongkir bolak-balik.',
-                            ],
-                            [
-                                'q' => 'Produk Flash Sale / Promo bisa diretur?',
-                                'a' => 'Hanya jika <strong>rusak/cacat/salah kirim</strong>. Retur alasan pribadi (tidak suka, salah ukuran) <strong>tidak diterima</strong> untuk produk Flash Sale/Promo/Bundle. Cek deskripsi & tabel ukuran sebelum beli.',
-                            ],
-                        ],
-                        'akun' => [
-                            [
-                                'q' => 'Lupa password, gimana reset?',
-                                'a' => 'Klik <strong>"Lupa Password"</strong> di halaman Login → Masukkan email terdaftar → Cek email (cek folder Spam) → Klik link reset (berlaku 60 menit) → Buat password baru.',
-                            ],
-                            [
-                                'q' => 'Gimana ganti email/nomor HP?',
-                                'a' => 'Login → Menu <strong>Profil Saya</strong> → Edit Profil → Ganti email/nomor HP → Simpan. Verifikasi OTP akan dikirim ke kontak baru.',
-                            ],
-                            [
-                                'q' => 'Bisa hapus akun?',
-                                'a' => 'Hubungi admin via WA/Email dengan permintaan hapus akun. Data transaksi (riwayat, nota, garansi) akan diarsipkan sesuai regulasi (min 5 tahun).',
-                            ],
-                            [
-                                'q' => 'Notifikasi WA/Email tidak masuk.',
-                                'a' => '• Cek folder Spam/Promotions (email).<br>
-                                      • Pastikan nomor WA aktif & tidak block nomor kami.<br>
-                                      • Cek pengaturan notifikasi di aplikasi WA.<br>
-                                      • Data kontak di Profil sudah benar?',
-                            ],
-                        ],
-                    ];
-                @endphp
-
                 @foreach($faqs as $category => $items)
                     @foreach($items as $index => $faq)
                         <div class="accordion-item faq-item" data-category="{{ $category }}" data-aos="fade-up" data-aos-delay="{{ ($loop->index * 30) }}">
                             <h2 class="accordion-header" id="heading{{ ucfirst($category) }}{{ $index + 1 }}">
                                 <button class="accordion-button {{ $loop->first && $category === 'pemesanan' ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ ucfirst($category) }}{{ $index + 1 }}" aria-expanded="{{ $loop->first && $category === 'pemesanan' ? 'true' : 'false' }}" aria-controls="collapse{{ ucfirst($category) }}{{ $index + 1 }}">
-                                    {{ $faq['q'] }}
+                                    {{ $faq->pertanyaan }}
                                 </button>
                             </h2>
                             <div id="collapse{{ ucfirst($category) }}{{ $index + 1 }}" class="accordion-collapse collapse {{ $loop->first && $category === 'pemesanan' ? 'show' : '' }}" aria-labelledby="heading{{ ucfirst($category) }}{{ $index + 1 }}" data-bs-parent="#faqAccordion">
                                 <div class="accordion-body">
-                                    {!! $faq['a'] !!}
+                                    {!! $faq->jawaban !!}
                                 </div>
                             </div>
                         </div>

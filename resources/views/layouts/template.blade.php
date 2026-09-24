@@ -373,6 +373,23 @@
                             </ul>
                         </li>
 
+                        <li class="header">KONTEN TOKO NAVIGATION</li>
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-file-text-o"></i>
+                                <span>Konten Toko</span>
+                                <span class="pull-right-container">
+                                    <i class="fa fa-angle-left pull-right"></i>
+                                </span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="{{ route('superadmin_data.tpl_faq.index') }}"><i
+                                            class="fa fa-circle-o"></i>Template FAQ</a></li>
+                                <li><a href="{{ route('superadmin_data.tpl_syaket.index') }}"><i
+                                            class="fa fa-circle-o"></i>Template Syarat & Ketentuan</a></li>
+                            </ul>
+                        </li>
+
                         <li class="header">LOG NAVIGATION</li>
                         <li>
                             <a href="{{ url('superadmin_data/log_aktivis') }}">
@@ -465,6 +482,23 @@
                                     </span>
                                 @endif
                             </a>
+                        </li>
+
+                        <li class="header">KONTEN TOKO NAVIGATION</li>
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-file-text-o"></i>
+                                <span>Konten Toko</span>
+                                <span class="pull-right-container">
+                                    <i class="fa fa-angle-left pull-right"></i>
+                                </span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="{{ route('pemilik_data.faq.index') }}"><i
+                                            class="fa fa-circle-o"></i>FAQ Toko</a></li>
+                                <li><a href="{{ route('pemilik_data.syaket.index') }}"><i
+                                            class="fa fa-circle-o"></i>Syarat & Ketentuan Toko</a></li>
+                            </ul>
                         </li>
 
                         <li class="header">USERS NAVIGATION</li>
@@ -569,6 +603,23 @@
                                             class="fa fa-circle-o"></i>Keuntungan Toko</a></li>
                                 <li><a href="{{ url('admin_data/view_totbenefit') }}"><i
                                             class="fa fa-circle-o"></i><span>Total Keuntungan Toko</span></a></li>
+                            </ul>
+                        </li>
+
+                        <li class="header">KONTEN TOKO NAVIGATION</li>
+                        <li class="treeview">
+                            <a href="#">
+                                <i class="fa fa-file-text-o"></i>
+                                <span>Konten Toko</span>
+                                <span class="pull-right-container">
+                                    <i class="fa fa-angle-left pull-right"></i>
+                                </span>
+                            </a>
+                            <ul class="treeview-menu">
+                                <li><a href="{{ route('admin_data.faq.index') }}"><i
+                                            class="fa fa-circle-o"></i>FAQ Toko</a></li>
+                                <li><a href="{{ route('admin_data.syaket.index') }}"><i
+                                            class="fa fa-circle-o"></i>Syarat & Ketentuan Toko</a></li>
                             </ul>
                         </li>
 

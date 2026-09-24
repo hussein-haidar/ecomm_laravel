@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 use App\Models\M_Home_toko;
 use App\Models\M_Produk;
 use App\Models\M_Pembayaran;
+use App\Models\M_FaqToko;
+use App\Models\M_SyaketToko;
+use App\Models\M_TemplateFaq;
+use App\Models\M_TemplateSyaket;
+use Illuminate\Support\Facades\DB;
 
 class Home_toko extends WebsiteController
 {
@@ -370,11 +375,24 @@ class Home_toko extends WebsiteController
 
         $produkData = $this->M_Home_toko->getProduk($keyword);
 
+        // Ambil konten S&K toko aktif; jika kosong, jatuh ke template superadmin
+        $sesiUserToko = $this->sesiUserTokoAktif();
+        $syaketToko = M_SyaketToko::getSyaketBySesi($sesiUserToko)->filter(fn($item) => $item->status);
+
+        if ($syaketToko->isEmpty()) {
+            $syaket = M_TemplateSyaket::where('status', true)
+                ->orderBy('urutan', 'ASC')->get();
+        } else {
+            $syaket = $syaketToko->sortBy('urutan')->values();
+        }
+
         $data = [
             'title2' => 'Syarat & Ketentuan',
             'produk_data' => $produkData,
             'jenis_produk_dropdown' => $this->M_Home_toko->getJenisProdukDropdown(),
             'user_logged_in' => $session->get('user_logged_in') === true,
+            'syaket' => $syaket,
+            'nama_toko' => $this->dataWebsite['nama_toko'],
         ];
         return view('pelanggan.toko.v_syaket', $data);
     }
@@ -387,12 +405,35 @@ class Home_toko extends WebsiteController
 
         $produkData = $this->M_Home_toko->getProduk($keyword);
 
+        // Ambil FAQ toko aktif; jika kosong, jatuh ke template superadmin
+        $sesiUserToko = $this->sesiUserTokoAktif();
+        $faqToko = M_FaqToko::getFaqBySesi($sesiUserToko)->filter(fn($item) => $item->status);
+
+        if ($faqToko->isEmpty()) {
+            $faqTemplate = M_TemplateFaq::where('status', true)
+                ->orderBy('urutan', 'ASC')->get();
+            $faqs = $faqTemplate->groupBy('kategori');
+        } else {
+            $faqSorted = $faqToko->sortBy('urutan')->values();
+            $faqs = $faqSorted->groupBy('kategori');
+        }
+
         $data = [
             'title2' => 'Bantuan / FAQ',
             'produk_data' => $produkData,
             'jenis_produk_dropdown' => $this->M_Home_toko->getJenisProdukDropdown(),
             'user_logged_in' => $session->get('user_logged_in') === true,
+            'faqs' => $faqs,
         ];
         return view('pelanggan.toko.v_bantuan', $data);
+    }
+
+    // Helper: sesi_user dari website toko aktif (diperlihatkan di frontend)
+    protected function sesiUserTokoAktif()
+    {
+        return DB::table('website')
+                ->where('status_website', 'Aktif')
+                ->where('sesi_user', 'Superadmin')
+                ->value('sesi_user') ?? 'Superadmin';
     }
 }
