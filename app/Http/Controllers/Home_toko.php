@@ -315,6 +315,13 @@ class Home_toko extends WebsiteController
         // Ambil data produk berdasarkan jenis dan keyword
         $produkData = $this->M_Home_toko->getProduk($keyword);
 
+        // Cek detail produk & status toko
+        $produkDetail = $this->M_Home_toko->detailStok($namaProduk);
+        if (!$produkDetail || ($produkDetail['status_verifikasi'] ?? 'Menunggu') !== 'Disetujui' || ($produkDetail['status_website'] ?? 'Non-aktif') !== 'Aktif') {
+            return redirect()->route('home_toko.index')
+                ->with('pesan_warning', 'Produk tidak tersedia atau lapak belum diverifikasi.');
+        }
+
         foreach ($produkData as &$produk) {
             // Mendeteksi format ukuran produk
             if (strpos($produk['ukuran_produk'], '-') !== false) {
@@ -354,7 +361,7 @@ class Home_toko extends WebsiteController
         $ulasan = \App\Models\M_Ulasan::getByNamaProduk($namaProduk);
         $ringkasan = \App\Models\M_Ulasan::getRingkasanByNamaProduk($namaProduk);
 
-        $produkDetail = $this->M_Home_toko->detailStok($namaProduk);
+        // $produkDetail & $sesiUserToko sudah diperoleh di atas (guard status toko)
         $sesiUserToko = $produkDetail['sesi_user'] ?? null;
 
         $data = [

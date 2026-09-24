@@ -202,7 +202,9 @@ class M_Home_toko extends Model
         })
         ->join('produk', 'stok_produk.nama_produk', '=', 'produk.nama_produk')
         ->leftJoin('website', 'stok_produk.sesi_user', '=', 'website.sesi_user') // join di sini
-        ->where('stok_produk.jenis_produk', $jenis_produk);
+        ->where('stok_produk.jenis_produk', $jenis_produk)
+        ->where('website.status_verifikasi', 'Disetujui')
+        ->where('website.status_website', 'Aktif');
 
     if (!empty($keyword)) {
         $query->where(function ($q) use ($keyword) {
