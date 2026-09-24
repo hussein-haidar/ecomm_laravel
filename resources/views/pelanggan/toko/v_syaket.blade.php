@@ -5,9 +5,11 @@
         // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
+                const hash = this.getAttribute('href');
+                if (hash.length <= 1) return;
+                const target = document.querySelector(hash);
                 if (target) {
+                    e.preventDefault();
                     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
             });
@@ -21,7 +23,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-9">
             {{-- Header --}}
-            <div class="text-center mb-5" data-aos="fade-up">
+            <div class="text-center mb-4" data-aos="fade-up">
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
                     <i class="fas fa-file-contract"></i>
                 </div>
@@ -29,22 +31,18 @@
                 <p class="text-muted">Terakhir diperbarui: {{ date('d F Y') }}</p>
             </div>
 
-            {{-- Intro --}}
-            <div class="card border-0 shadow-sm mb-5" data-aos="fade-up" data-aos-delay="100">
-                <div class="card-body p-4 p-lg-5">
-                    <p class="lead text-muted mb-0">
-                        Selamat datang di <strong>{{ $dataWebsite['nama_toko'] }}</strong>. 
-                        Dengan mengakses atau menggunakan layanan kami, Anda dianggap telah membaca, memahami, dan menyetujui semua Syarat dan Ketentuan berikut.
-                        Mohon baca dengan seksama sebelum melakukan transaksi.
-                    </p>
-                </div>
-            </div>
-
-            {{-- Terms Content --}}
-            <div class="card border-0 shadow-sm" data-aos="fade-up" data-aos-delay="200">
+            {{-- Terms Content (Intro + Pasal dalam satu dokumen) --}}
+            <div class="card border rounded-4 shadow-sm" data-aos="fade-up" data-aos-delay="200">
                 <div class="card-body p-4 p-lg-5">
                     <div class="terms-content">
-                        <section id="term-1" class="mb-5 pb-4 border-bottom">
+                        <div class="term-intro mb-4 pb-4 border-bottom">
+                            <p class="lead text-muted mb-0">
+                                Selamat datang di <strong>{{ $dataWebsite['nama_toko'] }}</strong>. 
+                                Dengan mengakses atau menggunakan layanan kami, Anda dianggap telah membaca, memahami, dan menyetujui semua Syarat dan Ketentuan berikut.
+                                Mohon baca dengan seksama sebelum melakukan transaksi.
+                            </p>
+                        </div>
+                        <section id="term-1" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">1</span>
                                 <h3 class="fw-bold mb-0">Informasi Produk</h3>
@@ -57,7 +55,7 @@
                             </ul>
                         </section>
 
-                        <section id="term-2" class="mb-5 pb-4 border-bottom">
+                        <section id="term-2" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">2</span>
                                 <h3 class="fw-bold mb-0">Pemesanan</h3>
@@ -71,7 +69,7 @@
                             </ul>
                         </section>
 
-                        <section id="term-3" class="mb-5 pb-4 border-bottom">
+                        <section id="term-3" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">3</span>
                                 <h3 class="fw-bold mb-0">Pembayaran</h3>
@@ -86,7 +84,7 @@
                             </ul>
                         </section>
 
-                        <section id="term-4" class="mb-5 pb-4 border-bottom">
+                        <section id="term-4" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">4</span>
                                 <h3 class="fw-bold mb-0">Pengiriman</h3>
@@ -101,7 +99,7 @@
                             </ul>
                         </section>
 
-                        <section id="term-5" class="mb-5 pb-4 border-bottom">
+                        <section id="term-5" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">5</span>
                                 <h3 class="fw-bold mb-0">Retur, Pengembalian & Penggantian</h3>
@@ -117,7 +115,7 @@
                             </ul>
                         </section>
 
-                        <section id="term-6" class="mb-5 pb-4 border-bottom">
+                        <section id="term-6" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">6</span>
                                 <h3 class="fw-bold mb-0">Garansi Produk</h3>
@@ -129,7 +127,7 @@
                             </ul>
                         </section>
 
-                        <section id="term-7" class="mb-5 pb-4 border-bottom">
+                        <section id="term-7" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">7</span>
                                 <h3 class="fw-bold mb-0">Privasi & Data Pribadi</h3>
@@ -140,10 +138,10 @@
                                 <li>Peningkatan layanan, analitik, & keamanan (fraud prevention).</li>
                                 <li>Kepatuhan hukum & peraturan perundang-undangan.</li>
                             </ul>
-                            <p>Kami tidak menjual data pribadi ke pihak ketiga. Detail lengkap lihat <a href="#" class="text-primary">Kebijakan Privasi</a>.</p>
+                            <p>Kami tidak menjual data pribadi ke pihak ketiga. Detail kebijakan privasi tercantum pada pasal ini.</p>
                         </section>
 
-                        <section id="term-8" class="mb-5 pb-4 border-bottom">
+                        <section id="term-8" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">8</span>
                                 <h3 class="fw-bold mb-0">Hak Kekayaan Intelektual</h3>
@@ -151,7 +149,7 @@
                             <p>Semua konten di website (logo, nama brand, desain UI, foto produk, deskripsi, kode program) adalah hak milik <strong>{{ $dataWebsite['nama_toko'] }}</strong> atau mitra/reseller yang berhak. Dilarang menyalin, mendistribusikan, atau memodifikasi tanpa izin tertulis.</p>
                         </section>
 
-                        <section id="term-9" class="mb-5 pb-4 border-bottom">
+                        <section id="term-9" class="mb-4 pb-4 border-bottom">
                             <div class="d-flex align-items-center gap-3 mb-3">
                                 <span class="badge bg-primary rounded-pill px-4 py-2 fs-6">9</span>
                                 <h3 class="fw-bold mb-0">Batas Tanggung Jawab</h3>
