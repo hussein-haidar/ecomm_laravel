@@ -282,6 +282,9 @@ class Auth extends WebsiteController
                 'ongkir' => 1700,
                 'deleted_at' => 0,
             ]);
+
+            // Otomatis salin template FAQ & S&K superadmin sebagai pedoman lapak baru
+            $this->salinTemplateKontenKeToko($user->sesi_user);
         }
 
         // Redirect with success message
@@ -878,5 +881,43 @@ class Auth extends WebsiteController
 
         Session::flash('pesan_logout', 'Logout Berhasil!');
         return redirect()->route('home_toko.index');
+    }
+
+    // Salin template FAQ & S&K superadmin sebagai pedoman lapak penjual baru
+    private function salinTemplateKontenKeToko($sesiUser)
+    {
+        $rowsFaq = [];
+        foreach (DB::table('template_faq')->orderBy('urutan')->orderBy('id_tpl_faq')->get() as $tpl) {
+            $rowsFaq[] = [
+                'sesi_user' => $sesiUser,
+                'kategori' => $tpl->kategori,
+                'pertanyaan' => $tpl->pertanyaan,
+                'jawaban' => $tpl->jawaban,
+                'urutan' => $tpl->urutan,
+                'status' => $tpl->status,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        if (!empty($rowsFaq)) {
+            DB::table('faq_toko')->insert($rowsFaq);
+        }
+
+        $rowsSyaket = [];
+        foreach (DB::table('template_syaket')->orderBy('urutan')->orderBy('id_tpl_syaket')->get() as $tpl) {
+            $rowsSyaket[] = [
+                'sesi_user' => $sesiUser,
+                'tipe' => $tpl->tipe,
+                'judul' => $tpl->judul,
+                'isi' => $tpl->isi,
+                'urutan' => $tpl->urutan,
+                'status' => $tpl->status,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+        if (!empty($rowsSyaket)) {
+            DB::table('syaket_toko')->insert($rowsSyaket);
+        }
     }
 }
