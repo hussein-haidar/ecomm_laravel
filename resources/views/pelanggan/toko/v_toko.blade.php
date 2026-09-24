@@ -142,6 +142,14 @@
                                                 <i class="fab fa-tiktok me-1"></i> TikTok
                                             </a>
                                         @endif
+                                        @if (!empty($nama_toko))
+                                            <a href="{{ route('home_toko.toko.bantuan', ['nama_toko' => $nama_toko]) }}" class="btn btn-outline-secondary bg-white rounded-pill px-4">
+                                                <i class="fas fa-question-circle me-2"></i>Bantuan / FAQ
+                                            </a>
+                                            <a href="{{ route('home_toko.toko.syaket', ['nama_toko' => $nama_toko]) }}" class="btn btn-outline-secondary bg-white rounded-pill px-4">
+                                                <i class="fas fa-file-contract me-2"></i>Syarat & Ketentuan
+                                            </a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>

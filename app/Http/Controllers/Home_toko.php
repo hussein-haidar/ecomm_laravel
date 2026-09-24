@@ -428,6 +428,89 @@ class Home_toko extends WebsiteController
         return view('pelanggan.toko.v_bantuan', $data);
     }
 
+    // Bantuan / FAQ per-toko (lapak penjual)
+    public function bantuan_toko($nama_toko, Request $request)
+    {
+        $nama_toko = urldecode($nama_toko);
+        $session = session();
+        $keyword = $request->input('keyword', '');
+
+        $website = $this->M_Home_toko->getWebsite($nama_toko)->first();
+        if (!$website) {
+            abort(404);
+        }
+        $namaTokoData = $website->nama_toko;
+        $sesiUserToko = $website->sesi_user ?? 'Superadmin';
+        $dataWebsiteToko = WebsiteController::buatDataWebsite($website);
+
+        $produkData = $this->M_Home_toko->getProduk($keyword);
+
+        // Ambil FAQ milik toko; jika kosong, jatuh ke template superadmin
+        $faqToko = M_FaqToko::getFaqBySesi($sesiUserToko)->filter(fn($item) => $item->status);
+
+        if ($faqToko->isEmpty()) {
+            $faqTemplate = M_TemplateFaq::where('status', true)
+                ->orderBy('urutan', 'ASC')->get();
+            $faqs = $faqTemplate->groupBy('kategori');
+        } else {
+            $faqSorted = $faqToko->sortBy('urutan')->values();
+            $faqs = $faqSorted->groupBy('kategori');
+        }
+
+        $data = [
+            'title2' => 'Bantuan / FAQ - ' . $namaTokoData,
+            'produk_data' => $produkData,
+            'jenis_produk_dropdown' => $this->M_Home_toko->getJenisProdukDropdown(),
+            'user_logged_in' => $session->get('user_logged_in') === true,
+            'faqs' => $faqs,
+            'dataWebsite' => $dataWebsiteToko, // override global agar CTA mengikuti toko ini
+            'link_bantuan' => route('home_toko.toko.bantuan', ['nama_toko' => $namaTokoData]),
+            'link_syaket' => route('home_toko.toko.syaket', ['nama_toko' => $namaTokoData]),
+        ];
+        return view('pelanggan.toko.v_bantuan', $data);
+    }
+
+    // Syarat & Ketentuan per-toko (lapak penjual)
+    public function syaket_toko($nama_toko, Request $request)
+    {
+        $nama_toko = urldecode($nama_toko);
+        $session = session();
+        $keyword = $request->input('keyword', '');
+
+        $website = $this->M_Home_toko->getWebsite($nama_toko)->first();
+        if (!$website) {
+            abort(404);
+        }
+        $namaTokoData = $website->nama_toko;
+        $sesiUserToko = $website->sesi_user ?? 'Superadmin';
+        $dataWebsiteToko = WebsiteController::buatDataWebsite($website);
+
+        $produkData = $this->M_Home_toko->getProduk($keyword);
+
+        // Ambil S&K milik toko; jika kosong, jatuh ke template superadmin
+        $syaketToko = M_SyaketToko::getSyaketBySesi($sesiUserToko)->filter(fn($item) => $item->status);
+
+        if ($syaketToko->isEmpty()) {
+            $syaket = M_TemplateSyaket::where('status', true)
+                ->orderBy('urutan', 'ASC')->get();
+        } else {
+            $syaket = $syaketToko->sortBy('urutan')->values();
+        }
+
+        $data = [
+            'title2' => 'Syarat & Ketentuan - ' . $namaTokoData,
+            'produk_data' => $produkData,
+            'jenis_produk_dropdown' => $this->M_Home_toko->getJenisProdukDropdown(),
+            'user_logged_in' => $session->get('user_logged_in') === true,
+            'syaket' => $syaket,
+            'nama_toko' => $namaTokoData,
+            'dataWebsite' => $dataWebsiteToko, // override global agar CTA mengikuti toko ini
+            'link_bantuan' => route('home_toko.toko.bantuan', ['nama_toko' => $namaTokoData]),
+            'link_syaket' => route('home_toko.toko.syaket', ['nama_toko' => $namaTokoData]),
+        ];
+        return view('pelanggan.toko.v_syaket', $data);
+    }
+
     // Helper: sesi_user dari website toko aktif (diperlihatkan di frontend)
     protected function sesiUserTokoAktif()
     {

@@ -332,6 +332,8 @@ Route::post('auth/ganti_password_user/{token}', [Auth::class, 'ganti_password_us
 
 // Rute untuk toko (filter berdasarkan level)  
 Route::get('home_toko/view_toko/{nama_toko}', [Home_toko::class, 'view_toko'])->name('view.toko');
+Route::get('home_toko/view_toko/{nama_toko}/bantuan', [Home_toko::class, 'bantuan_toko'])->name('home_toko.toko.bantuan');
+Route::get('home_toko/view_toko/{nama_toko}/syaket', [Home_toko::class, 'syaket_toko'])->name('home_toko.toko.syaket');
 Route::get('home_toko/katalog', [Home_toko::class, 'katalog'])->name('home_toko.katalog');
 Route::get('home_toko/jenisProduk/{jenis_produk?}', [App\Http\Controllers\Home_toko::class, 'jenisProduk'])->name('home_toko.jenisProduk');
 Route::get('home_toko/detail_produk/{nama_produk}', [Home_toko::class, 'detail_produk'])->name('home_toko.detail_produk');

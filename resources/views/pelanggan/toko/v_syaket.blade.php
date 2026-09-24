@@ -71,7 +71,7 @@
                             <a href="mailto:{{ $dataWebsite['email_toko'] }}" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
                                 <i class="fas fa-envelope me-2"></i>Kirim Email
                             </a>
-                            <a href="{{ route('home_toko.bantuan') }}" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
+                            <a href="{{ $link_bantuan ?? route('home_toko.bantuan') }}" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
                                 <i class="fas fa-question-circle me-2"></i>Bantuan / FAQ
                             </a>
                         </div>
