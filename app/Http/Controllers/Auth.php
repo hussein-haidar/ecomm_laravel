@@ -271,7 +271,8 @@ class Auth extends WebsiteController
                 'nama_toko' => $request->nama_toko,
                 'wa_pusat' => $request->wa_pusat,
                 'alamat_pusat' => $request->alamat_pusat,
-                'status_website' => 'Aktif',
+                'status_website' => 'Non-aktif',
+                'status_verifikasi' => 'Menunggu',
             ]);
 
             // Otomatis buat kurir toko default untuk lapak baru
@@ -340,6 +341,24 @@ class Auth extends WebsiteController
                 // Redirect sesuai level user
                 switch ($user->level) {
                     case 'pemilik':
+                        // Cek status verifikasi lapak
+                        $website = DB::table('website')
+                            ->where('sesi_user', $user->sesi_user)
+                            ->where('level', 'pemilik')
+                            ->first();
+                        if (!$website) {
+                            return redirect()->route('auth.login_user')
+                                ->with('pesan_warning', 'Data lapak tidak ditemukan. Hubungi admin.');
+                        }
+                        if ($website->status_verifikasi !== 'Disetujui') {
+                            $msg = match($website->status_verifikasi) {
+                                'Menunggu' => 'Lapak Anda sedang ditinjau admin. Silakan tunggu persetujuan.',
+                                'Ditolak' => 'Lapak ditolak: ' . ($website->alasan_ditolak ?? 'Tidak ada alasan.'),
+                                default => 'Lapak belum disetujui.',
+                            };
+                            return redirect()->route('auth.login_user')
+                                ->with('pesan_warning', $msg);
+                        }
                         return redirect()->route('home_pemilik');
                     case 'admin':
                         return redirect()->route('home_admin');

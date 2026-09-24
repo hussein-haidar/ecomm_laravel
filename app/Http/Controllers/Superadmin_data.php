@@ -480,6 +480,43 @@ class Superadmin_data extends Controller
         return redirect()->route('superadmin_data.view_website')->with('success', 'Status Web berhasil diperbarui.');
     }
 
+    // Konfirmasi Verifikasi Lapak
+    public function konfirmVerifikasi(Request $request)
+    {
+        $request->validate([
+            'status_verifikasi' => 'required|in:Menunggu,Disetujui,Ditolak',
+        ]);
+
+        $website = M_Website::findOrFail($request->id_website);
+
+        $dataUpdate = [
+            'status_verifikasi' => $request->status_verifikasi,
+            'alasan_ditolak' => $request->status_verifikasi === 'Ditolak' ? $request->alasan_ditolak : null,
+        ];
+
+        $website->update($dataUpdate);
+
+        // Kirim notifikasi ke pemilik
+        $pesan = match($request->status_verifikasi) {
+            'Disetujui' => 'Lapak ' . $website->nama_toko . ' telah DISETUJUI oleh admin. Silakan login untuk mulai beroperasi.',
+            'Ditolak' => 'Lapak ' . $website->nama_toko . ' DITOLAK: ' . ($request->alasan_ditolak ?? 'Tidak ada alasan.'),
+            'Menunggu' => 'Lapak ' . $website->nama_toko . ' dikembalikan ke status MENUNGGU review.',
+            default => 'Status verifikasi lapak ' . $website->nama_toko . ' diperbarui.',
+        };
+
+        DB::table('notifikasi')->insert([
+            'sesi_user' => $website->sesi_user,
+            'judul' => 'Status Verifikasi Lapak',
+            'pesan' => $pesan,
+            'tipe' => $request->status_verifikasi === 'Disetujui' ? 'success' : ($request->status_verifikasi === 'Ditolak' ? 'danger' : 'info'),
+            'link' => route('auth.login_user'),
+            'dibaca' => 0,
+            'waktu' => now(),
+        ]);
+
+        return redirect()->route('superadmin_data.view_website')->with('success', 'Status verifikasi berhasil diperbarui. Notifikasi terkirim ke pemilik.');
+    }
+
     public function website()
     {
         $data = [

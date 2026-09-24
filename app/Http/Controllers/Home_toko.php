@@ -112,10 +112,14 @@ class Home_toko extends WebsiteController
         $websiteData = null;
         $ringkasanToko = null;
         if (!empty($website) && count($website) > 0) {
-            $websiteData = (array) $website->first();
-            $sesiUserToko = $websiteData['sesi_user'] ?? null;
-            if ($sesiUserToko) {
-                $ringkasanToko = \App\Models\M_Ulasan::getRingkasanByToko($sesiUserToko);
+            $first = $website->first();
+            // Hanya tampilkan jika status verifikasi Disetujui DAN status website Aktif
+            if (($first->status_verifikasi ?? 'Menunggu') === 'Disetujui' && ($first->status_website ?? 'Non-aktif') === 'Aktif') {
+                $websiteData = (array) $first;
+                $sesiUserToko = $websiteData['sesi_user'] ?? null;
+                if ($sesiUserToko) {
+                    $ringkasanToko = \App\Models\M_Ulasan::getRingkasanByToko($sesiUserToko);
+                }
             }
         }
 
@@ -439,6 +443,10 @@ class Home_toko extends WebsiteController
         if (!$website) {
             abort(404);
         }
+        // Hanya tampilkan jika status verifikasi Disetujui DAN status website Aktif
+        if (($website->status_verifikasi ?? 'Menunggu') !== 'Disetujui' || ($website->status_website ?? 'Non-aktif') !== 'Aktif') {
+            abort(404);
+        }
         $namaTokoData = $website->nama_toko;
         $sesiUserToko = $website->sesi_user ?? 'Superadmin';
         $dataWebsiteToko = WebsiteController::buatDataWebsite($website);
@@ -479,6 +487,10 @@ class Home_toko extends WebsiteController
 
         $website = $this->M_Home_toko->getWebsite($nama_toko)->first();
         if (!$website) {
+            abort(404);
+        }
+        // Hanya tampilkan jika status verifikasi Disetujui DAN status website Aktif
+        if (($website->status_verifikasi ?? 'Menunggu') !== 'Disetujui' || ($website->status_website ?? 'Non-aktif') !== 'Aktif') {
             abort(404);
         }
         $namaTokoData = $website->nama_toko;

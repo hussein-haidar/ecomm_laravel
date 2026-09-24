@@ -30,7 +30,9 @@ class M_Home_toko extends Model
         $query = DB::table('stok_produk')
             ->select('stok_produk.*', 'produk.*','website.*')
             ->leftJoin('website', 'website.sesi_user', '=', 'stok_produk.sesi_user')
-            ->leftjoin('produk', 'produk.nama_produk', '=', 'stok_produk.nama_produk');
+            ->leftJoin('produk', 'produk.nama_produk', '=', 'stok_produk.nama_produk')
+            ->where('website.status_verifikasi', 'Disetujui')
+            ->where('website.status_website', 'Aktif');
         if (!empty($keyword)) {
             $query->where(function ($relation) use ($keyword) {
                 $relation->where('stok_produk.nama_produk', 'like', "%{$keyword}%")
@@ -96,6 +98,11 @@ class M_Home_toko extends Model
 
         if (!$toko) {
             return []; // Jika toko tidak ditemukan, kembalikan array kosong
+        }
+
+        // Cek status verifikasi dan status website
+        if ($toko->status_verifikasi !== 'Disetujui' || $toko->status_website !== 'Aktif') {
+            return []; // Toko belum disetujui atau non-aktif, tidak tampil
         }
 
         // Ambil sesi_user dari toko yang ditemukan

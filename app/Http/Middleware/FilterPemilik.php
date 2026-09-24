@@ -21,6 +21,24 @@ class FilterPemilik
             return redirect()->route($this->homeByLevel());
         }
 
+        // Cek status verifikasi lapak (hanya untuk pemilik)
+        $sesiUser = session()->get('sesi_user');
+        if ($sesiUser) {
+            $website = \DB::table('website')
+                ->where('sesi_user', $sesiUser)
+                ->where('level', 'pemilik')
+                ->first();
+            if ($website && $website->status_verifikasi !== 'Disetujui') {
+                $msg = match($website->status_verifikasi) {
+                    'Menunggu' => 'Lapak Anda sedang ditinjau admin. Silakan tunggu persetujuan.',
+                    'Ditolak' => 'Lapak ditolak: ' . ($website->alasan_ditolak ?? 'Tidak ada alasan.'),
+                    default => 'Lapak belum disetujui.',
+                };
+                return redirect()->route('auth.login_user')
+                    ->with('pesan_warning', $msg);
+            }
+        }
+
         return $next($request);
     }
 

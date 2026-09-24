@@ -92,6 +92,7 @@ Route::middleware([FilterSuperAdmin::class])->group(function () {
 
     Route::get('superadmin_data/view_website', [superadmin_data::class, 'view_website'])->name('superadmin_data.view_website');
     Route::post('superadmin_data/konfirmStatusWebAll', [superadmin_data::class, 'konfirmStatusWebAll'])->name('superadmin_data.konfirmStatusWebAll');
+    Route::post('superadmin_data/konfirmVerifikasi', [superadmin_data::class, 'konfirmVerifikasi'])->name('superadmin_data.konfirmVerifikasi');
     Route::post('superadmin_data/konfirmStatusWeb_By_Sesi', [superadmin_data::class, 'konfirmStatusWeb_By_Sesi'])->name('superadmin_data.konfirmStatusWeb_By_Sesi');
 
     Route::get('superadmin_data/event', [superadmin_data::class, 'event'])->name('superadmin_data.event');
