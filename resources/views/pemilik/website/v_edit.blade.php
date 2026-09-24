@@ -66,6 +66,12 @@
                                 class="form-control" required>
                         </div>
 
+                        <div class="form-group">
+                            <label>Email Toko</label>
+                            <input type="email" name="email_toko" value="{{ old('email_toko', $website->email_toko) }}"
+                                class="form-control" required>
+                        </div>
+
                         <!-- Lokasi Toko Cabang -->
                         <label><strong>Pilih Lokasi Toko Cabang</strong></label>
                         <div id="map_cabang" style="height: 300px; width: 100%; margin-bottom: 15px;"></div>

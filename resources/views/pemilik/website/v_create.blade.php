@@ -60,6 +60,12 @@
                                 placeholder="Masukkan No Telepon Toko" required>
                         </div>
 
+                        <div class="form-group">
+                            <label>Email Toko</label>
+                            <input type="email" name="email_toko" class="form-control"
+                                placeholder="Masukkan Email Toko" required>
+                        </div>
+
                         <!-- Lokasi Toko Cabang -->
                         <label><strong>Pilih Lokasi Toko Cabang</strong></label>
                         <div id="map_cabang" style="height: 300px; width: 100%; margin-bottom: 15px;"></div>

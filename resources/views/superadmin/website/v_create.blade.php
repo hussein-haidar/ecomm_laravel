@@ -76,6 +76,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Email Platform</label>
+                            <input type="email" name="email_toko" class="form-control"
+                                placeholder="Masukkan Email Toko" required>
+                        </div>
+
+                        <div class="form-group">
                             <label>Footer Platform</label>
                             <input type="text" name="footer_title" class="form-control"
                                 placeholder="Masukkan Footer Toko" required>

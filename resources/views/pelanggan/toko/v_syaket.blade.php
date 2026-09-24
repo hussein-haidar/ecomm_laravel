@@ -65,8 +65,11 @@
                         <h4 class="fw-bold mb-3">Masih Punya Pertanyaan?</h4>
                         <p class="mb-4 opacity-75">Tim layanan pelanggan kami siap membantu Anda kapan saja.</p>
                         <div class="d-flex justify-content-center gap-3 flex-wrap">
-                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $dataWebsite['wa_pusat'] ?? '6281234567890') }}" target="_blank" class="btn btn-light rounded-pill px-4 fw-semibold">
+                            <a href="https://wa.me/{{ $dataWebsite['wa_pusat_link'] }}" target="_blank" class="btn btn-light rounded-pill px-4 fw-semibold">
                                 <i class="fab fa-whatsapp me-2"></i>Chat WhatsApp
+                            </a>
+                            <a href="mailto:{{ $dataWebsite['email_toko'] }}" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
+                                <i class="fas fa-envelope me-2"></i>Kirim Email
                             </a>
                             <a href="{{ route('home_toko.bantuan') }}" class="btn btn-outline-light rounded-pill px-4 fw-semibold">
                                 <i class="fas fa-question-circle me-2"></i>Bantuan / FAQ

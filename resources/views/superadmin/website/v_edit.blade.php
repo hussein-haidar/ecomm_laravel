@@ -83,6 +83,12 @@
                         </div>
 
                         <div class="form-group">
+                            <label>Email Platform</label>
+                            <input type="email" name="email_toko" value="{{ old('email_toko', $website->email_toko) }}"
+                                class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
                             <label>Footer Platform</label>
                             <input type="text" name="footer_title"
                                 value="{{ old('footer_title', $website->footer_title) }}" class="form-control"

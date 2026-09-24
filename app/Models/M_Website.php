@@ -36,6 +36,7 @@ class M_Website extends Model
         'longitude_cabang',
         'alamat_cabang',
         'wa_cabang',
+        'email_toko',
         'footer_title',
         'link_IG',
         'link_Tiktok',

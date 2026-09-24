@@ -559,6 +559,7 @@ class Superadmin_data extends Controller
             'alamat_cabang' => $request->input('alamat_cabang'),
             'wa_pusat' => $request->input('wa_pusat'),
             'wa_cabang' => $request->input('wa_cabang'),
+            'email_toko' => $request->input('email_toko'),
             'footer_title' => $request->input('footer_title'),
             'link_IG' => $request->input('link_IG'),
             'link_FB' => $request->input('link_FB'),
@@ -604,6 +605,7 @@ class Superadmin_data extends Controller
             'id_user' => 'required',
             'sesi_user' => 'required',
             'level' => 'required',
+            'email_toko' => 'nullable|email|max:191',
         ]);
 
         $website = M_Website::findOrFail($id_website);
@@ -649,6 +651,7 @@ if ($request->hasFile('bgd_web')) {
             'alamat_cabang',
             'wa_pusat',
             'wa_cabang',
+            'email_toko',
             'footer_title',
             'link_IG',
             'link_FB',
@@ -664,6 +667,7 @@ if ($request->hasFile('bgd_web')) {
         $website->alamat_cabang = $request->alamat_cabang;
         $website->wa_pusat = $request->wa_pusat;
         $website->wa_cabang = $request->wa_cabang;
+        $website->email_toko = $request->email_toko;
 
         // Menyimpan perubahan ke database  
         $website->save();

@@ -937,6 +937,7 @@ if ($user->foto_user != "") {
             'alamat_cabang' => $request->input('alamat_cabang'),
             'wa_pusat' => $request->input('wa_pusat'),
             'wa_cabang' => $request->input('wa_cabang'),
+            'email_toko' => $request->input('email_toko'),
             'footer_title' => $request->input('footer_title'),
             'link_IG' => $request->input('link_IG'),
             'link_FB' => $request->input('link_FB'),
@@ -982,6 +983,7 @@ if ($user->foto_user != "") {
             'alamat_cabang' => 'required|string|max:255',
             'wa_pusat' => 'required|string|max:15', // Sesuaikan dengan format WA yang dibutuhkan  
             'wa_cabang' => 'required|string|max:15', // Sesuaikan dengan format WA yang dibutuhkan  
+            'email_toko' => 'nullable|email|max:191',  
             'logo_website' => 'nullable|image|mimes:png,jpg,jpeg|max:1024',
             'bgd_web' => 'nullable|image|mimes:png,jpg,jpeg|max:1024',
         ]);
@@ -1028,6 +1030,7 @@ if ($request->hasFile('bgd_web')) {
             'alamat_cabang',
             'wa_pusat',
             'wa_cabang',
+            'email_toko',
             'footer_title',
             'link_IG',
             'link_FB',
@@ -1043,6 +1046,7 @@ if ($request->hasFile('bgd_web')) {
         $website->alamat_cabang = $request->alamat_cabang;
         $website->wa_pusat = $request->wa_pusat;
         $website->wa_cabang = $request->wa_cabang;
+        $website->email_toko = $request->email_toko;
 
         // Menyimpan perubahan ke database  
         $website->save();

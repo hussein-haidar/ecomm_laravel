@@ -31,7 +31,7 @@
                                 <i class="fab fa-tiktok"></i>
                             </a>
                         @endif
-                        <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $dataWebsite['wa_pusat']) }}" target="_blank" class="social-btn whatsapp" title="WhatsApp" aria-label="WhatsApp" rel="noopener">
+                        <a href="https://wa.me/{{ $dataWebsite['wa_pusat_link'] }}" target="_blank" class="social-btn whatsapp" title="WhatsApp" aria-label="WhatsApp" rel="noopener">
                             <i class="fab fa-whatsapp"></i>
                         </a>
                     </div>
