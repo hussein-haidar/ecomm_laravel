@@ -31,7 +31,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-9">
             {{-- Header --}}
-            <div class="text-center mb-5" data-aos="fade-up">
+            <div class="text-center mb-5">
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
                     <i class="fas fa-question-circle"></i>
                 </div>
@@ -40,7 +40,7 @@
             </div>
 
             {{-- Search FAQ --}}
-            <div class="card border-0 shadow-sm mb-5" data-aos="fade-up" data-aos-delay="100">
+            <div class="card border-0 shadow-sm mb-5">
                 <div class="card-body p-4">
                     <div class="position-relative">
                         <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
@@ -50,7 +50,7 @@
             </div>
 
             {{-- FAQ Categories --}}
-            <div class="d-flex flex-wrap gap-2 justify-content-center mb-5" data-aos="fade-up" data-aos-delay="200" id="faqCategories">
+            <div class="d-flex flex-wrap gap-2 justify-content-center mb-5" id="faqCategories">
                 <button class="btn btn-primary rounded-pill px-4 active" data-category="all">Semua</button>
                 <button class="btn btn-outline-primary rounded-pill px-4" data-category="pemesanan">Pemesanan</button>
                 <button class="btn btn-outline-primary rounded-pill px-4" data-category="pembayaran">Pembayaran</button>
@@ -63,7 +63,7 @@
             <div class="accordion accordion-flush" id="faqAccordion">
                 @foreach($faqs as $category => $items)
                     @foreach($items as $index => $faq)
-                        <div class="accordion-item faq-item" data-category="{{ $category }}" data-aos="fade-up" data-aos-delay="{{ ($loop->index * 30) }}">
+                        <div class="accordion-item faq-item" data-category="{{ $category }}">
                             <h2 class="accordion-header" id="heading{{ ucfirst($category) }}{{ $index + 1 }}">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ ucfirst($category) }}{{ $index + 1 }}" aria-expanded="false" aria-controls="collapse{{ ucfirst($category) }}{{ $index + 1 }}">
                                     {{ $faq->pertanyaan }}
@@ -80,14 +80,14 @@
             </div>
 
             {{-- No Results Message --}}
-            <div id="faqNoResults" class="text-center py-5 d-none" data-aos="fade-up">
+            <div id="faqNoResults" class="text-center py-5 d-none">
                 <i class="fas fa-search fa-3x text-muted mb-3"></i>
                 <h5 class="text-muted">Tidak Ada Hasil</h5>
                 <p class="text-muted">Coba kata kunci lain atau pilih kategori berbeda.</p>
             </div>
 
             {{-- Contact CTA --}}
-            <div class="card border-0 shadow-sm mt-5" data-aos="fade-up" data-aos-delay="300" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card border-0 shadow-sm mt-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                 <div class="card-body p-5 text-white text-center">
                     <h4 class="fw-bold mb-3">Masih Butuh Bantuan?</h4>
                     <p class="mb-4 opacity-75">Tim support kami siap bantu via WhatsApp atau Email.</p>

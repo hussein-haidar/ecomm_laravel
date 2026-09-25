@@ -13,9 +13,7 @@
         "laravel/socialite": "^5.29",
         "laravel/tinker": "^2.10.1",
         "league/flysystem-aws-s3-v3": "^3.35",
-        "midtrans/midtrans-php": "*",
-        "picqer/php-barcode-generator": "*",
-        "simplesoftwareio/simple-qrcode": "^4.2"
+        "midtrans/midtrans-php": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
