@@ -38,3 +38,10 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Development files (tidak perlu di-push)
+/database/database.sqlite
+/storage/logs/
+/storage/framework/sessions/
+/storage/framework/cache/
+/storage/framework/views/
