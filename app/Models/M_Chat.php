@@ -182,4 +182,55 @@ class M_Chat extends Model
             ->where('pengirim', 'pelanggan')
             ->count();
     }
+
+    /**
+     * Ambil info produk terkait chat berdasarkan id_stok atau nama_produk.
+     * Foto disimpan di public/fotoproduk/{nama_file}
+     */
+    public static function getProdukChat($id_stok = null, $nama_produk = null, $sesi_user = null)
+    {
+        if (empty($id_stok) && empty($nama_produk)) {
+            return null;
+        }
+
+        $query = \DB::table('stok_produk as s')
+            ->leftJoin('produk as p', function ($join) {
+                $join->on('p.nama_produk', '=', 's.nama_produk');
+            })
+            ->select(
+                's.id_stok',
+                's.nama_produk',
+                's.harga_produk',
+                's.ukuran_produk',
+                's.satuan_produk',
+                's.sesi_user',
+                'p.foto_produk'
+            );
+
+        if (!empty($id_stok)) {
+            $query->where('s.id_stok', $id_stok);
+        } else {
+            $query->where('s.nama_produk', $nama_produk);
+        }
+
+        if (!empty($sesi_user)) {
+            $query->where('s.sesi_user', $sesi_user);
+            $query->where('p.sesi_user', $sesi_user);
+        }
+
+        $row = $query->first();
+
+        if (!$row) {
+            return null;
+        }
+
+        return [
+            'id_stok'       => $row->id_stok,
+            'nama_produk'   => $row->nama_produk,
+            'harga_produk'  => (float) ($row->harga_produk ?? 0),
+            'ukuran_produk' => $row->ukuran_produk,
+            'satuan_produk' => $row->satuan_produk,
+            'foto_produk'   => $row->foto_produk, // nama file di public/fotoproduk/
+        ];
+    }
 }

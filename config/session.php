@@ -47,6 +47,8 @@ return [
     */
 
     'max_active_hours' => (int) env('SESSION_MAX_ACTIVE_HOURS', 24),
+    'logout_idle_minutes' => (int) env('SESSION_LOGOUT_IDLE_MINUTES', 10),
+'logout_warn_seconds' => (int) env('SESSION_LOGOUT_WARN_SECONDS', 60),
 
     /*
     |--------------------------------------------------------------------------

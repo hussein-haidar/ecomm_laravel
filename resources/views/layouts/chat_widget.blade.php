@@ -74,6 +74,66 @@
             border-bottom: 1px solid #dee2e6;
         }
 
+        #chat-widget-product-card {
+            background: #fff;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        #chat-widget-product-card .product-badge {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            background: #e8f4ff;
+            border-bottom: 1px solid #d6e9f8;
+        }
+
+        #chat-widget-product-card .product-badge i,
+        #chat-widget-product-card .product-badge span {
+            color: #3c8dbc;
+        }
+
+        #chat-widget-product-card .product-body {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+        }
+
+        #chat-widget-product-card .product-body .product-img {
+            width: 48px;
+            height: 48px;
+            flex: 0 0 48px;
+        }
+
+        #chat-widget-product-card .product-body .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        #chat-widget-product-card .product-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        #chat-widget-product-card .product-name {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #chat-widget-product-card .product-price {
+            color: #dd4b39;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
         #chat-widget-form {
             padding: 8px;
             background: #fff;
@@ -121,6 +181,7 @@
                             <strong id="chat-widget-thread-title"></strong>
                         </div>
                     </div>
+                    <div id="chat-widget-product-card" class="d-none"></div>
                     <div id="chat-widget-messages"></div>
                     <form id="chat-widget-form" class="chat-widget-form d-flex gap-1">
                         <input type="text" id="chat-widget-input" class="form-control form-control-sm"
@@ -141,7 +202,8 @@
                 daftar: '{{ route('pelanggan_data.chatDaftar') }}',
                 buka: '{{ route('pelanggan_data.chatBuka') }}',
                 pesan: '{{ route('pelanggan_data.chatPesan', ['id_chat' => '__ID__']) }}',
-                kirim: '{{ route('pelanggan_data.chatKirim') }}'
+                kirim: '{{ route('pelanggan_data.chatKirim') }}',
+                produk: '{{ route('pelanggan_data.chatProdukInfo', ['id_chat' => '__ID__']) }}'
             };
             var csrfToken = '{{ csrf_token() }}';
 
@@ -179,7 +241,12 @@
             }
 
             function muatDaftar() {
-                fetch(urls.daftar)
+                fetch(urls.daftar, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (!res.success) return;
@@ -201,7 +268,7 @@
                         } else {
 daftar.forEach(function(c) {
                 var aktif = chatAktifId && chatAktifId == c.id_chat;
-                var produk = c.nama_produk ?
+                var badgeProduk = c.nama_produk ?
                     '<span class="badge bg-info text-dark">' + escHtml(c.nama_produk) +
                     '</span>' :
                     '<span class="badge bg-secondary">Chat umum toko</span>';
@@ -210,14 +277,31 @@ daftar.forEach(function(c) {
                 var lastPesan = c.last_pesan ? c.last_pesan : 'Belum ada pesan';
                 var senderBadge = c.last_pesan ?
                     '<span class="badge bg-primary me-1">' + escHtml(c.nama_pengirim || '') + '</span>' : '';
+
+                var fotoHtml = '';
+                if (c.foto_produk_url) {
+                    fotoHtml = '<div style="width:44px;height:44px;flex:0 0 44px;margin-right:10px;">'
+                        + '<img src="' + c.foto_produk_url + '" alt="' + escHtml(c.nama_produk || '') + '" '
+                        + 'style="width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #eee;display:block;" '
+                        + 'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+                        + '<div style="width:100%;height:100%;display:none;align-items:center;justify-content:center;background:#f0f0f0;border-radius:6px;">'
+                        + '<i class="fas fa-box text-muted"></i></div>'
+                        + '</div>';
+                }
+
                 html += '<div class="chat-widget-item p-2 ' + (aktif ? 'active' : '') +
                     '" data-id="' + c.id_chat + '">' +
+                    '<div class="d-flex align-items-center">' +
+                    fotoHtml +
+                    '<div class="flex-grow-1" style="min-width:0;">' +
                     '<div class="d-flex justify-content-between align-items-center">' +
                     '<strong class="text-truncate">' + escHtml(c.nama_toko) + '</strong>' +
                     '<small class="text-nowrap ms-2 text-muted">' + escHtml(c.last_waktu) +
                     '</small></div>' +
-                    '<div class="small">' + produk + belumDibaca + '</div>' +
+                    '<div class="small">' + badgeProduk + belumDibaca + '</div>' +
                     '<div class="small text-truncate text-muted">' + senderBadge + ' ' + escHtml(lastPesan) + '</div>' +
+                    '</div>' +
+                    '</div>' +
                     '</div>';
             });
                         }
@@ -233,6 +317,48 @@ daftar.forEach(function(c) {
                     .catch(function() {});
             }
 
+            var productCardEl = document.getElementById('chat-widget-product-card');
+
+            function muatKartuProduk() {
+                if (!chatAktifId) return;
+                var produkUrl = urls.produk.replace('__ID__', String(chatAktifId));
+                fetch(produkUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (!res.success || !res.produk) {
+                            productCardEl.classList.add('d-none');
+                            productCardEl.innerHTML = '';
+                            return;
+                        }
+                        var p = res.produk;
+                        var fotoHtml = p.foto_url
+                            ? '<img src="' + p.foto_url + '" alt="' + escHtml(p.nama_produk) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" style="width:48px;height:48px;object-fit:cover;border-radius:5px;border:1px solid #eee;">'
+                              + '<div style="width:48px;height:48px;display:none;align-items:center;justify-content:center;background:#f0f0f0;border-radius:5px;"><i class="fas fa-box text-muted"></i></div>'
+                            : '<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:#f0f0f0;border-radius:5px;"><i class="fas fa-box text-muted"></i></div>';
+                        var ukuran = p.ukuran_produk ? ' <span class="text-muted" style="font-size:11px;">| ' + escHtml(p.ukuran_produk) + '</span>' : '';
+                        productCardEl.innerHTML =
+                            '<div class="product-badge"><i class="fas fa-question-circle"></i><span style="font-weight:600;font-size:11px;">Menanyakan produk ini</span></div>' +
+                            '<div class="product-body">' +
+                            '<div class="product-img">' + fotoHtml + '</div>' +
+                            '<div class="product-info">' +
+                            '<div class="product-name">' + escHtml(p.nama_produk) + '</div>' +
+                            '<div class="product-price">' + escHtml(p.harga_produk) + ukuran + '</div>' +
+                            '</div>' +
+                            '<a href="' + p.link_produk + '" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill" style="flex:0 0 auto;"><i class="fas fa-eye"></i></a>' +
+                            '</div>';
+                        productCardEl.classList.remove('d-none');
+                    })
+                    .catch(function() {
+                        productCardEl.classList.add('d-none');
+                        productCardEl.innerHTML = '';
+                    });
+            }
+
             function bukaThread(idChat, namaToko) {
                 chatAktifId = idChat;
                 chatAktifNama = namaToko;
@@ -240,7 +366,10 @@ daftar.forEach(function(c) {
                 threadEl.classList.remove('d-none');
                 threadTitle.textContent = namaToko;
                 messagesEl.innerHTML = '<div class="text-center text-muted py-5">Memuat pesan...</div>';
+                productCardEl.classList.add('d-none');
+                productCardEl.innerHTML = '';
                 muatPesan();
+                muatKartuProduk();
                 if (pollPesanTimer) clearInterval(pollPesanTimer);
                 pollPesanTimer = setInterval(muatPesan, 3000);
             }
@@ -262,7 +391,12 @@ daftar.forEach(function(c) {
 
             function muatPesan() {
                 if (!chatAktifId) return;
-                fetch(urls.pesan.replace('__ID__', String(chatAktifId)))
+                fetch(urls.pesan.replace('__ID__', String(chatAktifId)), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (!res.success) return;
@@ -293,7 +427,7 @@ daftar.forEach(function(c) {
                 fd.append('nama_toko', namaToko);
                 fd.append('id_stok', idStok || '');
                 fd.append('_token', csrfToken);
-                fetch(urls.buka, { method: 'POST', body: fd })
+                fetch(urls.buka, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         if (res.success && res.chat) {
@@ -330,7 +464,7 @@ daftar.forEach(function(c) {
                 fd.append('id_chat', chatAktifId);
                 fd.append('pesan', pesan);
                 fd.append('_token', csrfToken);
-                fetch(urls.kirim, { method: 'POST', body: fd })
+                fetch(urls.kirim, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
                     .then(function(r) { return r.json(); })
                     .then(function(res) {
                         inputEl.value = '';
@@ -341,6 +475,82 @@ daftar.forEach(function(c) {
 
             pollDaftarTimer = setInterval(muatDaftar, 15000);
             muatDaftar();
-        })();
-    </script>
+
+            // ============= SESSION EXPIRY COUNTDOWN =============
+            // Laravel SESSION_MAX_ACTIVE_HOURS = 24 jam (konfigurasi di .env)
+            var SESSION_LIFETIME_HOURS = parseInt('<?= env('SESSION_MAX_ACTIVE_HOURS', 24) ?>') || 24;
+            var SESSION_WARNING_SECONDS = 30;
+            var sessionExpiryTime = null;
+            var sessionWarningTimer = null;
+
+            function formatDuration(seconds) {
+                var h = Math.floor(seconds / 3600);
+                var m = Math.floor((seconds % 3600) / 60);
+                var s = seconds % 60;
+                var parts = [];
+                if (h > 0) parts.push(h + 'j');
+                if (m > 0) parts.push(m + 'm');
+                if (s > 0 || parts.length === 0) parts.push(s + 'd');
+                return parts.join(' ');
+            }
+
+            function showSessionWarning(remaining) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: '<i class="fas fa-clock text-warning mr-2"></i>Meta Sesi!',
+                        html: '<div class="text-left">Sesi Anda akan habis dalam <strong>' +
+                             formatDuration(remaining) + '</strong>.<br>Anda akan otomatis logout. Pilih "Perpanjang" untuk melanjutkan.</div>',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Perpanjang',
+                        cancelButtonText: 'Tidak, Logout',
+                        timer: remaining * 1000,
+                        timerProgressBar: true
+                    }).then(function(result) {
+                        if (result.isConfirmed || result.isDismissed) {
+                            // Refresh halaman untuk refresh session
+                            window.location.reload();
+                        }
+                    });
+                } else {
+                    if (confirm('Sesi Anda akan habis dalam ' + formatDuration(remaining) + '. Klik OK untuk perpanjang atau BATAL untuk logout.')) {
+                        window.location.reload();
+                    }
+                }
+            }
+
+            function startSessionWarning() {
+                if (sessionWarningTimer) clearInterval(sessionWarningTimer);
+                sessionWarningTimer = setInterval(function() {
+                    if (!sessionExpiryTime) {
+                        // Request expiry time dari server
+                        fetch('/api/session-expiry', { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                            .then(function(r) { return r.json(); })
+                            .then(function(data) {
+                                if (data.expiry_at) {
+                                    sessionExpiryTime = new Date(data.expiry_at).getTime();
+                                }
+                            })
+                            .catch(function() {});
+                        return;
+                    }
+                    var now = Date.now();
+                    var remainingMs = sessionExpiryTime - now;
+                    var remainingSec = Math.ceil(remainingMs / 1000);
+                    if (remainingSec <= 0) {
+                        clearInterval(sessionWarningTimer);
+                        sessionWarningTimer = null;
+                        sessionExpiryTime = null;
+                        Swal.fire({ title: 'Sesi Habis', text: 'Silakan login kembali.', icon: 'info', showConfirmButton: false, timer: 3000 });
+                        // Redirect ke halaman login
+                        window.location.href = '{{ route('auth.login_pelanggan') }}';
+                    } else if (remainingSec <= SESSION_WARNING_SECONDS) {
+                        showSessionWarning(remainingSec);
+                        clearInterval(sessionWarningTimer);
+                        sessionWarningTimer = null;
+                    }
+                }, 1000);
+            }
+
+            startSessionWarning();
 @endif

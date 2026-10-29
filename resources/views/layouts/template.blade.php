@@ -768,6 +768,47 @@
         </script>
     @endif
 
+    {{-- Pre-logout warning (pemilik/admin/superadmin) --}}
+    @if (in_array(session('level'), ['pemilik', 'admin', 'superadmin']) && session('logged_in_at'))
+    @php
+        $staffLimit = (int) config('session.max_active_hours');
+        $staffRemaining = max(0, (int) \Illuminate\Support\Carbon::parse(session('logged_in_at'))->addHours($staffLimit)->diffInSeconds(now(), false));
+        $staffWarnAt = (int) config('session.logout_warn_seconds');
+        $staffLoginUrl = match (session('level')) {
+            'superadmin' => route('auth.login_superadmin'),
+            'pemilik', 'admin' => route('auth.login_user'),
+            default => route('auth.login_user'),
+        };
+    @endphp
+    <script>
+        (function() {
+            let remaining = {{ $staffRemaining }};
+            const warnAt = {{ $staffWarnAt }};
+            let warned = false;
+
+            function tick() {
+                remaining--;
+                if (remaining <= 0) {
+                    window.location.href = "{{ $staffLoginUrl }}";
+                    return;
+                }
+                if (!warned && remaining <= warnAt) {
+                    warned = true;
+                    Swal.fire({
+                        title: 'Sesi Akan Berakhir',
+                        text: 'Sesi ' + {{ json_encode(session('level')) }} + ' akan logout otomatis dalam 10 menit. Refresh halaman atau logout manual terlebih dahulu.',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK'
+                    });
+                }
+                setTimeout(tick, 1000);
+            }
+            setTimeout(tick, 1000);
+        })();
+    </script>
+    @endif
+
     <script>
         document.getElementById('logout-btn').addEventListener('click', function(event) {
             event.preventDefault(); // Mencegah form untuk submit langsung  

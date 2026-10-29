@@ -450,11 +450,15 @@ class Admin_data extends Controller
 
         $daftarChat = M_Chat::daftarChatAdmin($sesiUser);
 
+        // Ambil info produk terkait chat (foto, harga, dll)
+        $produkChat = M_Chat::getProdukChat($chatAktif->id_stok, $chatAktif->nama_produk, $sesiUser);
+
         $data = [
-            'title' => 'Detail Chat Pelanggan',
-            'title2' => 'Detail Chat Pelanggan',
+            'title'       => 'Detail Chat Pelanggan',
+            'title2'      => 'Detail Chat Pelanggan',
             'daftar_chat' => $daftarChat,
-            'chat_aktif' => $chatAktif,
+            'chat_aktif'  => $chatAktif,
+            'produk_chat' => $produkChat,
         ];
 
         return view('admin.chat.chat', $data);

@@ -394,6 +394,7 @@ Route::middleware([FilterPelanggan::class])->group(
         Route::get('pelanggan_data/chat/pesan/{id_chat}', [Pelanggan_data::class, 'chatPesan'])->name('pelanggan_data.chatPesan');
         Route::get('pelanggan_data/chat/daftar', [Pelanggan_data::class, 'chatDaftar'])->name('pelanggan_data.chatDaftar');
         Route::post('pelanggan_data/chat/buka', [Pelanggan_data::class, 'chatBuka'])->name('pelanggan_data.chatBuka');
+        Route::get('pelanggan_data/chat/produk/{id_chat}', [Pelanggan_data::class, 'chatProdukInfo'])->name('pelanggan_data.chatProdukInfo');
         Route::get('pelanggan_data/lihatBayar/{id_bayar}', [Pelanggan_data::class, 'lihatBayar'])->name('pelanggan_data.lihatBayar');
         Route::get('pelanggan_data/addBayar/{id_bayar}', [Pelanggan_data::class, 'addBayar'])->name('pelanggan_data.addBayar');
         Route::post('pelanggan_data/saveBayar/{id_bayar}', [Pelanggan_data::class, 'saveBayar'])->name('pelanggan_data.saveBayar');

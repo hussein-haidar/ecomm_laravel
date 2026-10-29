@@ -70,6 +70,47 @@
             </div>
         </div>
 
+        {{-- Kartu produk terkait chat --}}
+        @if(!empty($produk_chat))
+            <div class="box-body" style="padding:12px 15px 0;">
+                <div class="border rounded" style="border-color:#e5e5e5;overflow:hidden;">
+                    <div style="display:flex;align-items:center;gap:6px;padding:5px 12px;background:#e8f4ff;border-bottom:1px solid #d6e9f8;">
+                        <i class="fa fa-question-circle" style="color:#3c8dbc;"></i>
+                        <span style="color:#3c8dbc;font-weight:600;font-size:12px;">Menanyakan produk ini</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;">
+                        <div style="width:56px;height:56px;flex:0 0 56px;">
+                            @if(!empty($produk_chat['foto_produk']))
+                                <img src="{{ asset('fotoproduk/' . $produk_chat['foto_produk']) }}"
+                                     alt="{{ $produk_chat['nama_produk'] }}"
+                                     style="width:100%;height:100%;object-fit:cover;border-radius:6px;border:1px solid #eee;">
+                            @else
+                                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;border-radius:6px;">
+                                    <i class="fa fa-box text-muted"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;font-size:14px;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                {{ $produk_chat['nama_produk'] }}
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;margin-top:2px;">
+                                <span style="color:#dd4b39;font-weight:700;">Rp {{ number_format($produk_chat['harga_produk'], 0, ',', '.') }}</span>
+                                @if(!empty($produk_chat['ukuran_produk']))
+                                    <span style="color:#999;font-size:12px;">| {{ $produk_chat['ukuran_produk'] }}</span>
+                                @endif
+                            </div>
+                        </div>
+                        <a href="{{ route('home_toko.detail_produk', $produk_chat['nama_produk']) }}"
+                           target="_blank"
+                           class="btn btn-sm btn-default">
+                            <i class="fa fa-external-link"></i> Lihat Produk
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         <div class="box-body">
             <div id="chat-box" class="chat-box">
                 <div class="text-center text-muted">

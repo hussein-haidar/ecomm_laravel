@@ -2392,6 +2392,13 @@ class Pelanggan_data extends WebsiteController
 
         $daftarChat = M_Chat::daftarChatPelanggan($id_pelanggan)
             ->map(function ($c) use ($belumDibaca) {
+                // Ambil info produk terkait chat (foto, dll)
+                $produk = M_Chat::getProdukChat($c->id_stok, $c->nama_produk, $c->sesi_user);
+
+                $fotoUrl = !empty($produk['foto_produk'])
+                    ? asset('fotoproduk/' . $produk['foto_produk'])
+                    : null;
+
                 return [
                     'id_chat' => $c->id_chat,
                     'nama_toko' => $c->nama_toko,
@@ -2401,6 +2408,8 @@ class Pelanggan_data extends WebsiteController
                     'nama_pengirim' => $c->nama_pengirim,
                     'last_waktu' => $c->last_waktu ? Carbon::parse($c->last_waktu)->format('d/m H:i') : '',
                     'belum_dibaca' => (int) ($belumDibaca[$c->id_chat] ?? 0),
+                    'id_stok' => $c->id_stok,
+                    'foto_produk_url' => $fotoUrl,
                 ];
             });
 
@@ -2459,6 +2468,48 @@ class Pelanggan_data extends WebsiteController
                 'nama_toko' => $chat->nama_toko,
                 'nama_produk' => $chat->nama_produk,
             ],
+        ]);
+    }
+
+    public function chatProdukInfo($id_chat)
+    {
+        $id_pelanggan = session('id_pelanggan');
+
+        if (empty($id_pelanggan)) {
+            return response()->json(['success' => false, 'message' => 'Harus login terlebih dahulu.'], 401);
+        }
+
+        $chat = M_Chat::where('id_chat', $id_chat)
+            ->where('id_pelanggan', $id_pelanggan)
+            ->first();
+
+        if (!$chat) {
+            return response()->json(['success' => false, 'message' => 'Chat tidak ditemukan.'], 403);
+        }
+
+        $produk = M_Chat::getProdukChat($chat->id_stok, $chat->nama_produk, $chat->sesi_user);
+
+        if (!$produk) {
+            return response()->json(['success' => true, 'produk' => null]);
+        }
+
+        $fotoUrl = !empty($produk['foto_produk'])
+            ? asset('fotoproduk/' . $produk['foto_produk'])
+            : null;
+
+        $linkProduk = !empty($produk['nama_produk'])
+            ? route('home_toko.detail_produk', $produk['nama_produk'])
+            : '#';
+
+        return response()->json([
+            'success' => true,
+            'produk'  => [
+                'id_stok'       => $produk['id_stok'],
+                'nama_produk'   => $produk['nama_produk'],
+                'harga_produk'  => 'Rp ' . number_format($produk['harga_produk'], 0, ',', '.'),
+                'ukuran_produk' => $produk['ukuran_produk'],
+                'foto_url'      => $fotoUrl,
+                'link_produk'   => $linkProduk,            ]
         ]);
     }
 
