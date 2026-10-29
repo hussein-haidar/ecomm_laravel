@@ -51,38 +51,8 @@
         }
 
         /* Navbar scrolled state */
-        .navbar-modern.scrolled {
-            background: #ffffff !important;
-            box-shadow: none !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-
         .navbar-modern.scrolled .nav-link {
             color: #0f172a !important;
-        }
-
-        .navbar-modern.scrolled .search-box input {
-            background: #f8fafc !important;
-            color: #0f172a;
-            border-color: #e2e8f0;
-        }
-
-        .navbar-modern.scrolled .search-box input::placeholder {
-            color: #94a3b8;
-        }
-
-        .navbar-modern.scrolled .search-box i {
-            color: #0ea5e9;
-        }
-
-        .navbar-modern.scrolled .cart-btn {
-            background: var(--nav-grad) !important;
-            border-color: transparent;
-        }
-
-        .navbar-modern.scrolled .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2814, 165, 233, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
 
         /* Professional white navbar (always readable on any page) */
@@ -122,10 +92,7 @@
 
         .navbar-modern .nav-link:hover,
         .navbar-modern .nav-link.active {
-            background: var(--nav-grad);
-            color: #fff !important;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+            color: #0f172a !important;
         }
 
         .navbar-modern .nav-link.no-caret::after {
@@ -172,10 +139,6 @@
             color: inherit;
         }
 
-        .navbar-modern .search-box .search-submit:hover {
-            color: #0b8ec8;
-        }
-
         .navbar-modern .search-box {
             width: 200px;
         }
@@ -201,10 +164,6 @@
             flex-shrink: 0;
         }
 
-        .navbar-modern .cart-btn:hover {
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
-        }
-
         .navbar-modern .notif-btn {
             background: #eef6ff;
             color: #0ea5e9;
@@ -216,13 +175,6 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.3s ease;
-        }
-
-        .navbar-modern .notif-btn:hover {
-            background: var(--nav-grad);
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
         }
 
         .navbar-modern .auth-btn {
@@ -237,12 +189,6 @@
             background: var(--nav-grad);
             border: none;
             color: #fff;
-        }
-
-        .navbar-modern .auth-btn-solid:hover {
-            background: var(--nav-grad-hover);
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
         }
 
         .navbar-modern .navbar-toggler {
@@ -793,12 +739,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s ease;
-        }
-
-        .mobile-nav-close:hover {
-            background: #e9ecef;
-            color: #1a1a1a;
         }
 
         .mobile-nav-content {
@@ -843,14 +783,7 @@
             color: #333;
             text-decoration: none;
             border-radius: 10px;
-            transition: all 0.2s ease;
             font-weight: 500;
-        }
-
-        .nav-item:hover,
-        .nav-item:focus {
-            background: #f1f3f9;
-            color: #0ea5e9;
         }
 
         .nav-item i:first-child {
@@ -858,10 +791,6 @@
             text-align: center;
             font-size: 1.1rem;
             color: #6c757d;
-        }
-
-        .nav-item:hover i:first-child {
-            color: #0ea5e9;
         }
 
         .nav-item span {
@@ -878,21 +807,11 @@
             color: #fff !important;
         }
 
-        .nav-item-primary:hover {
-            background: linear-gradient(135deg, #0b8ec8, #0da271);
-            color: #fff !important;
-        }
-
         .nav-item-primary i {
             color: #fff !important;
         }
 
         .nav-item-danger {
-            color: #dc3545 !important;
-        }
-
-        .nav-item-danger:hover {
-            background: #fff0f0;
             color: #dc3545 !important;
         }
 
@@ -903,12 +822,7 @@
 
         .dropdown-arrow {
             margin-left: auto;
-            transition: transform 0.2s ease;
             font-size: 0.8rem;
-        }
-
-        .dropdown-trigger[aria-expanded="true"] .dropdown-arrow {
-            transform: rotate(180deg);
         }
 
         .nav-sublist {
@@ -932,13 +846,6 @@
             border-radius: 8px;
             font-size: 0.9rem;
             font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .nav-sublink:hover {
-            background: #f1f3f9;
-            color: #0ea5e9;
-            padding-left: 1rem;
         }
 
         .nav-sublink i:first-child {
@@ -1126,6 +1033,7 @@
             userLoggedIn: {{ auth()->check() ? 'true' : 'false' }},
             userId: {{ auth()->id() ?? 'null' }},
             cartCount: {{ session('cart_count') ?? 0 }},
+            sessionRole: '{{ session('level') }}',
             routes: {
                 addToCart: '{{ route('pelanggan_data.add_to_cart') }}',
                 buyNow: '{{ route('pelanggan_data.beliLangsung', ['id_stok' => '__ID__']) }}',
@@ -1183,14 +1091,9 @@
         });
 
         // Navbar scroll state
-        function updateNavbar() {
-            const nav = document.querySelector('.navbar-modern');
-            if (nav) {
-                nav.classList.toggle('scrolled', window.scrollY > 40);
-            }
-        }
-        window.addEventListener('scroll', updateNavbar, { passive: true });
-        window.addEventListener('DOMContentLoaded', updateNavbar);
+        window.addEventListener('DOMContentLoaded', function() {
+            // (scrolled-state effect dihapus - navbar static)
+        });
 
         // Mobile Navigation Drawer
 function toggleNavbar() {
@@ -1303,9 +1206,41 @@ function toggleNavbar() {
             });
         }
     </script>
-    {{-- Page-specific scripts --}}
-    @stack('scripts')
+    {{-- Pre-logout warning (pelanggan idle) --}}
+    @if (session('level') === 'pelanggan' && session('last_activity_at'))
+    @php
+        $idleLimit = (int) config('session.logout_idle_minutes');
+        $warnSec = (int) config('session.logout_warn_seconds');
+        $remainingSeconds = max(0, (int) \Illuminate\Support\Carbon::parse(session('last_activity_at'))->addMinutes($idleLimit)->diffInSeconds(now(), false));
+    @endphp
+    <script>
+        (function() {
+            let remaining = {{ $remainingSeconds }};
+            const warnAt = {{ $warnSec }};
+            let warned = false;
 
+            function tick() {
+                remaining--;
+                if (remaining <= 0) {
+                    window.location.href = "{{ route('auth.login_pelanggan') }}";
+                    return;
+                }
+                if (!warned && remaining <= warnAt) {
+                    warned = true;
+                    Swal.fire({
+                        title: 'Sesi Akan Berakhir',
+                        text: 'Anda tidak aktif. Sesi pelanggan akan keluar otomatis dalam ' + remaining + ' detik. Bergerak atau refresh halaman untuk memperpanjang.',
+                        icon: 'warning',
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK'
+                    });
+                }
+                setTimeout(tick, 1000);
+            }
+            setTimeout(tick, 1000);
+        })();
+    </script>
+    @endif
     {{-- SweetAlert2 untuk notifikasi --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @if (session('pesan_welcome'))
